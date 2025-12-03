@@ -1,0 +1,131 @@
+# Sonarr Calendar Daily Test Data
+# Use with display_mode: "Calendar - Daily"
+# Shows today's episodes in a detailed daily view
+
+custom_fields:
+  display_mode: "Calendar - Daily"
+  show_queue: "Yes"
+  show_calendar: "Yes"
+  show_stats: "Yes"
+  max_queue_items: 5
+  max_calendar_items: 10
+  show_health: "Yes"
+  show_library_size: "Yes"
+  show_wanted: "Yes"
+  show_network: "Yes"
+  show_quality: "Yes"
+  show_eta: "Yes"
+  date_format: "Relative"
+  calendar_days: 7
+
+variables:
+  app_name: Sonarr
+  app_type: sonarr
+  last_updated: "2025-01-15T10:30:00Z"
+  timezone:
+    name: "America/New_York"
+    offset_seconds: -18000
+
+  health:
+    status: ok
+    issues: []
+
+  queue:
+    count: 0
+    items: []
+
+  # Calendar with multiple shows today and throughout the week
+  calendar:
+    count: 12
+    items:
+      # Today - Jan 15 (Wednesday) - Multiple shows at different times
+      - title: "Good Morning America [S49E95]"
+        air_date: "2025-01-15"
+        air_date_time: "07:00"
+        network: "ABC"
+        days_until: 0
+      - title: "The View [S28E85]"
+        air_date: "2025-01-15"
+        air_date_time: "11:00"
+        network: "ABC"
+        days_until: 0
+      - title: "General Hospital [S62E45]"
+        air_date: "2025-01-15"
+        air_date_time: "14:00"
+        network: "ABC"
+        days_until: 0
+      - title: "Abbott Elementary [S04E10]"
+        air_date: "2025-01-15"
+        air_date_time: "20:00"
+        network: "ABC"
+        days_until: 0
+      - title: "The Last of Us [S02E01]"
+        air_date: "2025-01-15"
+        air_date_time: "21:00"
+        network: "HBO"
+        days_until: 0
+      - title: "Jimmy Kimmel Live [S23E10]"
+        air_date: "2025-01-15"
+        air_date_time: "23:35"
+        network: "ABC"
+        days_until: 0
+
+      # Tomorrow - Jan 16 (Thursday)
+      - title: "Severance [S02E01]"
+        air_date: "2025-01-16"
+        air_date_time: "00:00"
+        network: "Apple TV+"
+        days_until: 1
+      - title: "Law & Order [S24E08]"
+        air_date: "2025-01-16"
+        air_date_time: "20:00"
+        network: "NBC"
+        days_until: 1
+
+      # Jan 17 (Friday)
+      - title: "House of the Dragon [S02E08]"
+        air_date: "2025-01-17"
+        air_date_time: "21:00"
+        network: "HBO"
+        days_until: 2
+
+      # Jan 18 (Saturday)
+      - title: "Saturday Night Live [S50E10]"
+        air_date: "2025-01-18"
+        air_date_time: "23:30"
+        network: "NBC"
+        days_until: 3
+
+      # Jan 19 (Sunday)
+      - title: "Yellowjackets [S03E01]"
+        air_date: "2025-01-19"
+        air_date_time: "21:00"
+        network: "Showtime"
+        days_until: 4
+
+      # Jan 20 (Monday)
+      - title: "9-1-1 [S08E06]"
+        air_date: "2025-01-20"
+        air_date_time: "20:00"
+        network: "ABC"
+        days_until: 5
+
+  stats:
+    total_series: 145
+    total_episodes: 3420
+    episodes_on_disk: 3180
+    episodes_missing: 240
+    monitored_missing: 45
+    library_size_bytes: 2750000000000
+    library_size_formatted: "2.5 TB"
+
+  disk:
+    total_space: 4000000000000
+    free_space: 1200000000000
+    total_space_formatted: "3.6 TB"
+    free_space_formatted: "1.1 TB"
+    percent_used: 70
+
+  activity:
+    last_grabbed: "The Last of Us [S02E01]"
+    last_grabbed_time: "1 hour ago"

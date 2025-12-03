@@ -1,0 +1,194 @@
+# Sonarr Calendar Monthly Test Data
+# Use with display_mode: "Calendar - Monthly"
+# Shows full month grid with episodes spread across 30 days
+
+custom_fields:
+  display_mode: "Calendar - Monthly"
+  show_queue: "Yes"
+  show_calendar: "Yes"
+  show_stats: "Yes"
+  max_queue_items: 5
+  max_calendar_items: 30
+  show_health: "Yes"
+  show_library_size: "Yes"
+  show_wanted: "Yes"
+  show_network: "Yes"
+  show_quality: "Yes"
+  show_eta: "Yes"
+  date_format: "Relative"
+  calendar_days: 30
+
+variables:
+  app_name: Sonarr
+  app_type: sonarr
+  last_updated: "2025-01-15T10:30:00Z"
+  timezone:
+    name: "America/New_York"
+    offset_seconds: -18000
+
+  health:
+    status: ok
+    issues: []
+
+  queue:
+    count: 0
+    items: []
+
+  # Calendar with shows spread across a full month
+  calendar:
+    count: 25
+    items:
+      # Week 1 - Jan 15-21
+      - title: "The Last of Us [S02E01]"
+        air_date: "2025-01-15"
+        air_date_time: "21:00"
+        network: "HBO"
+        days_until: 0
+      - title: "Abbott Elementary [S04E10]"
+        air_date: "2025-01-15"
+        air_date_time: "20:00"
+        network: "ABC"
+        days_until: 0
+      - title: "Severance [S02E01]"
+        air_date: "2025-01-16"
+        air_date_time: "00:00"
+        network: "Apple TV+"
+        days_until: 1
+      - title: "Law & Order [S24E08]"
+        air_date: "2025-01-16"
+        air_date_time: "20:00"
+        network: "NBC"
+        days_until: 1
+      - title: "House of the Dragon [S02E08]"
+        air_date: "2025-01-17"
+        air_date_time: "21:00"
+        network: "HBO"
+        days_until: 2
+      - title: "Saturday Night Live [S50E10]"
+        air_date: "2025-01-18"
+        air_date_time: "23:30"
+        network: "NBC"
+        days_until: 3
+      - title: "Yellowjackets [S03E01]"
+        air_date: "2025-01-19"
+        air_date_time: "21:00"
+        network: "Showtime"
+        days_until: 4
+      - title: "The Bear [S04E01]"
+        air_date: "2025-01-19"
+        air_date_time: "00:00"
+        network: "FX"
+        days_until: 4
+      - title: "9-1-1 [S08E06]"
+        air_date: "2025-01-20"
+        air_date_time: "20:00"
+        network: "ABC"
+        days_until: 5
+      - title: "FBI [S07E08]"
+        air_date: "2025-01-21"
+        air_date_time: "20:00"
+        network: "CBS"
+        days_until: 6
+
+      # Week 2 - Jan 22-28
+      - title: "The Last of Us [S02E02]"
+        air_date: "2025-01-22"
+        air_date_time: "21:00"
+        network: "HBO"
+        days_until: 7
+      - title: "Abbott Elementary [S04E11]"
+        air_date: "2025-01-22"
+        air_date_time: "20:00"
+        network: "ABC"
+        days_until: 7
+      - title: "Severance [S02E02]"
+        air_date: "2025-01-23"
+        air_date_time: "00:00"
+        network: "Apple TV+"
+        days_until: 8
+      - title: "House of the Dragon [S02E09]"
+        air_date: "2025-01-24"
+        air_date_time: "21:00"
+        network: "HBO"
+        days_until: 9
+      - title: "Yellowjackets [S03E02]"
+        air_date: "2025-01-26"
+        air_date_time: "21:00"
+        network: "Showtime"
+        days_until: 11
+      - title: "The Bear [S04E02]"
+        air_date: "2025-01-26"
+        air_date_time: "00:00"
+        network: "FX"
+        days_until: 11
+
+      # Week 3 - Jan 29 - Feb 4
+      - title: "The Last of Us [S02E03]"
+        air_date: "2025-01-29"
+        air_date_time: "21:00"
+        network: "HBO"
+        days_until: 14
+      - title: "Severance [S02E03]"
+        air_date: "2025-01-30"
+        air_date_time: "00:00"
+        network: "Apple TV+"
+        days_until: 15
+      - title: "House of the Dragon [S02E10]"
+        air_date: "2025-01-31"
+        air_date_time: "21:00"
+        network: "HBO"
+        days_until: 16
+      - title: "Yellowjackets [S03E03]"
+        air_date: "2025-02-02"
+        air_date_time: "21:00"
+        network: "Showtime"
+        days_until: 18
+      - title: "The Bear [S04E03]"
+        air_date: "2025-02-02"
+        air_date_time: "00:00"
+        network: "FX"
+        days_until: 18
+
+      # Week 4 - Feb 5-11
+      - title: "The Last of Us [S02E04]"
+        air_date: "2025-02-05"
+        air_date_time: "21:00"
+        network: "HBO"
+        days_until: 21
+      - title: "Severance [S02E04]"
+        air_date: "2025-02-06"
+        air_date_time: "00:00"
+        network: "Apple TV+"
+        days_until: 22
+      - title: "Yellowjackets [S03E04]"
+        air_date: "2025-02-09"
+        air_date_time: "21:00"
+        network: "Showtime"
+        days_until: 25
+
+      # Week 5 - Feb 12-14
+      - title: "The Last of Us [S02E05]"
+        air_date: "2025-02-12"
+        air_date_time: "21:00"
+        network: "HBO"
+        days_until: 28
+
+  stats:
+    total_series: 145
+    total_episodes: 3420
+    episodes_on_disk: 3180
+    episodes_missing: 240
+    monitored_missing: 45
+    library_size_bytes: 2750000000000
+    library_size_formatted: "2.5 TB"
+
+  disk:
+    total_space: 4000000000000
+    free_space: 1200000000000
+    total_space_formatted: "3.6 TB"
+    free_space_formatted: "1.1 TB"
+    percent_used: 70
+
+  activity:
+    last_grabbed: "The Last of Us [S02E01]"
+    last_grabbed_time: "1 hour ago"

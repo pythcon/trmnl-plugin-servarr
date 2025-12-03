@@ -1,0 +1,128 @@
+---
+strategy: webhook
+no_screen_padding: 'no'
+dark_mode: 'no'
+static_data: 
+polling_verb: 
+polling_url: 
+polling_headers: 
+polling_body: 
+id: 190336
+custom_fields:
+- keyname: display_mode
+  field_type: select
+  name: Display Mode
+  description: Choose between dashboard view or calendar-only views
+  options:
+  - Dashboard
+  - Calendar - Daily
+  - Calendar - Weekly
+  - Calendar - Monthly
+  default: Dashboard
+- keyname: show_queue
+  field_type: select
+  name: Show Download Queue
+  description: Display active downloads with progress
+  options:
+  - 'Yes'
+  - 'No'
+  default: 'Yes'
+- keyname: show_calendar
+  field_type: select
+  name: Show Upcoming Releases
+  description: Display upcoming episodes, movies, albums, or books
+  options:
+  - 'Yes'
+  - 'No'
+  default: 'Yes'
+- keyname: show_recently_added
+  field_type: select
+  name: Show Recently Added
+  description: Display recently added items to your library
+  options:
+  - 'Yes'
+  - 'No'
+  default: 'Yes'
+- keyname: show_stats
+  field_type: select
+  name: Show Library Statistics
+  description: Display library size and item counts
+  options:
+  - 'Yes'
+  - 'No'
+  default: 'Yes'
+- keyname: max_queue_items
+  field_type: number
+  name: Max Queue Items
+  description: Maximum number of queue items to display (1-10)
+  placeholder: 5
+  min: 1
+  max: 10
+  default: 5
+- keyname: show_health
+  field_type: select
+  name: Show Health Status
+  description: Display system health indicator
+  options:
+  - 'Yes'
+  - 'No'
+  default: 'Yes'
+- keyname: show_library_size
+  field_type: select
+  name: Show Library Size
+  description: Display total library size in stats
+  options:
+  - 'Yes'
+  - 'No'
+  default: 'Yes'
+- keyname: show_wanted
+  field_type: select
+  name: Show Wanted Count
+  description: Display count of missing monitored items
+  options:
+  - 'Yes'
+  - 'No'
+  default: 'Yes'
+- keyname: show_network
+  field_type: select
+  name: Show Network/Studio
+  description: Display network or studio info for upcoming items
+  options:
+  - 'Yes'
+  - 'No'
+  default: 'Yes'
+- keyname: show_quality
+  field_type: select
+  name: Show Quality in Queue
+  description: Display quality profile for queue items
+  options:
+  - 'Yes'
+  - 'No'
+  default: 'Yes'
+- keyname: show_eta
+  field_type: select
+  name: Show ETA in Queue
+  description: Display estimated time remaining for downloads
+  options:
+  - 'Yes'
+  - 'No'
+  default: 'Yes'
+- keyname: date_format
+  field_type: select
+  name: Date Format
+  description: How to display dates in calendar
+  options:
+  - Relative
+  - Short
+  - Full
+  default: Relative
+- keyname: calendar_days
+  field_type: number
+  name: Calendar Days Ahead
+  description: Number of days to look ahead for upcoming releases (1-30)
+  placeholder: 7
+  min: 1
+  max: 30
+  default: 7
+name: Servarr Dashboard
+refresh_interval: 15

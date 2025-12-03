@@ -1,0 +1,33 @@
+# TRMNL Plugin Development
+.trmnlp/
+*.png
+*.html
+
+# Environment and secrets
+.env
+.env.local
+*.secret
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-*
+
+# Ruby
+*.gem
+.bundle/
+vendor/bundle/
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/

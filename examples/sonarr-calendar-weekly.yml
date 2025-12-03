@@ -1,0 +1,157 @@
+# Sonarr Calendar Weekly Test Data
+# Use with display_mode: "Calendar - Weekly"
+# Shows 7-day grid Sun-Sat with today (Wed Jan 15) highlighted
+# days_until: negative = past days, 0 = today, positive = future
+
+custom_fields:
+  display_mode: "Calendar - Weekly"
+  show_queue: "Yes"
+  show_calendar: "Yes"
+  show_recently_added: "Yes"
+  show_stats: "Yes"
+  max_queue_items: 5
+  show_health: "Yes"
+  show_library_size: "Yes"
+  show_wanted: "Yes"
+  show_network: "Yes"
+  show_quality: "Yes"
+  show_eta: "Yes"
+  date_format: "Relative"
+  calendar_days: 7
+
+variables:
+  app_name: Sonarr
+  app_type: sonarr
+  last_updated: "2025-01-15T10:30:00Z"
+  timezone:
+    name: "America/New_York"
+    offset_seconds: -18000
+
+  health:
+    status: ok
+    issues: []
+
+  queue:
+    count: 0
+    items: []
+
+  # Calendar with shows across Sun-Sat (Jan 12-18)
+  # Today is Wednesday Jan 15 (days_until: 0)
+  calendar:
+    count: 16
+    items:
+      # Sunday Jan 12 (days_until: -3)
+      - title: "Yellowjackets [S03E01]"
+        air_date: "2025-01-12"
+        air_date_time: "21:00"
+        network: "Showtime"
+        days_until: -3
+      - title: "The Bear [S04E01]"
+        air_date: "2025-01-12"
+        air_date_time: "00:00"
+        network: "FX"
+        days_until: -3
+
+      # Monday Jan 13 (days_until: -2)
+      - title: "9-1-1 [S08E06]"
+        air_date: "2025-01-13"
+        air_date_time: "20:00"
+        network: "ABC"
+        days_until: -2
+      - title: "The Rookie [S07E05]"
+        air_date: "2025-01-13"
+        air_date_time: "22:00"
+        network: "ABC"
+        days_until: -2
+
+      # Tuesday Jan 14 (days_until: -1)
+      - title: "FBI [S07E08]"
+        air_date: "2025-01-14"
+        air_date_time: "20:00"
+        network: "CBS"
+        days_until: -1
+      - title: "FBI: International [S04E08]"
+        air_date: "2025-01-14"
+        air_date_time: "21:00"
+        network: "CBS"
+        days_until: -1
+
+      # Wednesday Jan 15 - TODAY (days_until: 0)
+      - title: "The Last of Us [S02E01]"
+        air_date: "2025-01-15"
+        air_date_time: "21:00"
+        network: "HBO"
+        days_until: 0
+      - title: "Abbott Elementary [S04E10]"
+        air_date: "2025-01-15"
+        air_date_time: "20:00"
+        network: "ABC"
+        days_until: 0
+
+      # Thursday Jan 16 (days_until: 1)
+      - title: "Severance [S02E01]"
+        air_date: "2025-01-16"
+        air_date_time: "00:00"
+        network: "Apple TV+"
+        days_until: 1
+      - title: "Law & Order [S24E08]"
+        air_date: "2025-01-16"
+        air_date_time: "20:00"
+        network: "NBC"
+        days_until: 1
+
+      # Friday Jan 17 (days_until: 2)
+      - title: "House of the Dragon [S02E08]"
+        air_date: "2025-01-17"
+        air_date_time: "21:00"
+        network: "HBO"
+        days_until: 2
+
+      # Saturday Jan 18 (days_until: 3)
+      - title: "Saturday Night Live [S50E10]"
+        air_date: "2025-01-18"
+        air_date_time: "23:30"
+        network: "NBC"
+        days_until: 3
+      - title: "48 Hours [S37E15]"
+        air_date: "2025-01-18"
+        air_date_time: "22:00"
+        network: "CBS"
+        days_until: 3
+
+      # Extra shows to test overflow
+      - title: "Dateline NBC [S33E12]"
+        air_date: "2025-01-17"
+        air_date_time: "21:00"
+        network: "NBC"
+        days_until: 2
+      - title: "Blue Bloods [S14E10]"
+        air_date: "2025-01-17"
+        air_date_time: "22:00"
+        network: "CBS"
+        days_until: 2
+      - title: "20/20 [S47E10]"
+        air_date: "2025-01-17"
+        air_date_time: "21:00"
+        network: "ABC"
+        days_until: 2
+
+  stats:
+    total_series: 145
+    total_episodes: 3420
+    episodes_on_disk: 3180
+    episodes_missing: 240
+    monitored_missing: 45
+    library_size_bytes: 2750000000000
+    library_size_formatted: "2.5 TB"
+
+  disk:
+    total_space: 4000000000000
+    free_space: 1200000000000
+    total_space_formatted: "3.6 TB"
+    free_space_formatted: "1.1 TB"
+    percent_used: 70
+
+  activity:
+    last_grabbed: "The Last of Us [S02E01]"
+    last_grabbed_time: "1 hour ago"

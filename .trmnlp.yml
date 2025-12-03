@@ -1,0 +1,113 @@
+# Sonarr Dashboard Test Data
+# Use with display_mode: "Dashboard"
+# Copy variables section to .trmnlp.yml for testing
+
+custom_fields:
+  display_mode: "Dashboard"
+  show_queue: "Yes"
+  show_calendar: "Yes"
+  show_recently_added: "Yes"
+  show_stats: "Yes"
+  max_queue_items: 5
+  show_health: "Yes"
+  show_library_size: "Yes"
+  show_wanted: "Yes"
+  show_network: "Yes"
+  show_quality: "Yes"
+  show_eta: "Yes"
+  date_format: "Relative"
+  calendar_days: 7
+
+variables:
+  app_name: Sonarr
+  app_type: sonarr
+  last_updated: "2025-01-15T10:30:00Z"
+  timezone:
+    name: "America/New_York"
+    offset_seconds: -18000
+
+  health:
+    status: ok
+    issues: []
+
+  queue:
+    count: 3
+    items:
+      - title: "Breaking Bad [S01E01] - Pilot"
+        quality: "HDTV-720p"
+        status: "downloading"
+        progress: 67
+        eta: "12 min"
+      - title: "Better Call Saul [S06E13] - Saul Gone"
+        quality: "WEBDL-1080p"
+        status: "downloading"
+        progress: 45
+        eta: "28 min"
+      - title: "The Wire [S01E01] - The Target"
+        quality: "Bluray-1080p"
+        status: "queued"
+        progress: 0
+        eta: "pending"
+
+  recently_added:
+    count: 5
+    items:
+      - title: "The Sopranos [S01E01] - Pilot"
+        time_ago: "2 hours ago"
+      - title: "The Sopranos [S01E02] - 46 Long"
+        time_ago: "2 hours ago"
+      - title: "True Detective [S01E01] - The Long Bright Dark"
+        time_ago: "5 hours ago"
+      - title: "Chernobyl [S01E01] - 1:23:45"
+        time_ago: "1 day ago"
+      - title: "Band of Brothers [S01E01] - Currahee"
+        time_ago: "2 days ago"
+
+  calendar:
+    count: 5
+    items:
+      - title: "The Last of Us [S02E03]"
+        air_date: "2025-01-16"
+        air_date_time: "2025-01-17T02:00:00Z"
+        network: "HBO"
+        days_until: 1
+      - title: "House of the Dragon [S02E08]"
+        air_date: "2025-01-17"
+        air_date_time: "2025-01-18T01:00:00Z"
+        network: "HBO"
+        days_until: 2
+      - title: "Severance [S02E01]"
+        air_date: "2025-01-18"
+        air_date_time: "2025-01-18T05:00:00Z"
+        network: "Apple TV+"
+        days_until: 3
+      - title: "Yellowjackets [S03E01]"
+        air_date: "2025-01-20"
+        air_date_time: "2025-01-21T02:00:00Z"
+        network: "Showtime"
+        days_until: 5
+      - title: "The Bear [S04E01]"
+        air_date: "2025-01-22"
+        air_date_time: "2025-01-22T05:00:00Z"
+        network: "FX"
+        days_until: 7
+
+  stats:
+    total_series: 145
+    total_episodes: 3420
+    episodes_on_disk: 3180
+    episodes_missing: 240
+    monitored_missing: 45
+    library_size_bytes: 2750000000000
+    library_size_formatted: "2.5 TB"
+
+  disk:
+    total_space: 4000000000000
+    free_space: 1200000000000
+    total_space_formatted: "3.6 TB"
+    free_space_formatted: "1.1 TB"
+    percent_used: 70
+
+  activity:
+    last_grabbed: "Breaking Bad [S01E01]"
+    last_grabbed_time: "2 hours ago"

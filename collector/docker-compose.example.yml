@@ -1,0 +1,148 @@
+# TRMNL Servarr Collector - Docker Compose Example
+#
+# This example shows how to add the TRMNL collector to your existing Servarr stack.
+# Copy and modify this file to match your setup.
+#
+# Usage:
+#   1. Copy this file to your Servarr docker-compose directory
+#   2. Update the environment variables with your actual values
+#   3. Run: docker-compose up -d
+#
+# Note: Each Servarr application needs its own collector instance with its own TRMNL webhook URL.
+services:
+  # ============================================
+  # TRMNL Collector for Sonarr
+  # ============================================
+  trmnl-collector-sonarr:
+    build:
+      context: ./collector
+      dockerfile: Dockerfile
+    # Or use pre-built image when available:
+    # image: ghcr.io/yourusername/trmnl-servarr-collector:latest
+    container_name: trmnl-collector-sonarr
+    restart: unless-stopped
+    environment:
+      # Required: Your Sonarr instance URL (use container name if on same network)
+      - SERVARR_URL=http://sonarr:8989
+      # Required: Sonarr API key (Settings > General > API Key)
+      - API_KEY=your-sonarr-api-key-here
+      # Required: TRMNL webhook URL (from your plugin settings)
+      - WEBHOOK_URL=https://usetrmnl.com/api/custom_plugins/your-sonarr-webhook-id
+      # Optional: Explicitly set app type (auto-detected if not set)
+      # - APP_TYPE=sonarr
+      # Optional: Number of days to show in calendar (default: 7)
+      - CALENDAR_DAYS=7
+      # Optional: Collection interval in seconds (900 = 15 minutes)
+      # If set, runs continuously. If 0 or unset, runs once and exits.
+      - INTERVAL=900
+      # Optional: Timezone for date calculations
+      - TZ=America/New_York
+    networks:
+      - servarr
+
+  # ============================================
+  # TRMNL Collector for Radarr
+  # ============================================
+  trmnl-collector-radarr:
+    build:
+      context: ./collector
+      dockerfile: Dockerfile
+    container_name: trmnl-collector-radarr
+    restart: unless-stopped
+    environment:
+      - SERVARR_URL=http://radarr:7878
+      - API_KEY=your-radarr-api-key-here
+      - WEBHOOK_URL=https://usetrmnl.com/api/custom_plugins/your-radarr-webhook-id
+      - CALENDAR_DAYS=14
+      - INTERVAL=900
+      - TZ=America/New_York
+    networks:
+      - servarr
+
+  # ============================================
+  # TRMNL Collector for Lidarr (Music)
+  # ============================================
+  # trmnl-collector-lidarr:
+  #   build:
+  #     context: ./collector
+  #     dockerfile: Dockerfile
+  #   container_name: trmnl-collector-lidarr
+  #   restart: unless-stopped
+  #   environment:
+  #     - SERVARR_URL=http://lidarr:8686
+  #     - API_KEY=your-lidarr-api-key-here
+  #     - WEBHOOK_URL=https://usetrmnl.com/api/custom_plugins/your-lidarr-webhook-id
+  #     - INTERVAL=900
+  #     - TZ=America/New_York
+  #   networks:
+  #     - servarr
+
+  # ============================================
+  # TRMNL Collector for Readarr (Books)
+  # ============================================
+  # trmnl-collector-readarr:
+  #   build:
+  #     context: ./collector
+  #     dockerfile: Dockerfile
+  #   container_name: trmnl-collector-readarr
+  #   restart: unless-stopped
+  #   environment:
+  #     - SERVARR_URL=http://readarr:8787
+  #     - API_KEY=your-readarr-api-key-here
+  #     - WEBHOOK_URL=https://usetrmnl.com/api/custom_plugins/your-readarr-webhook-id
+  #     - INTERVAL=900
+  #     - TZ=America/New_York
+  #   networks:
+  #     - servarr
+
+  # ============================================
+  # TRMNL Collector for Prowlarr (Indexers)
+  # ============================================
+  # trmnl-collector-prowlarr:
+  #   build:
+  #     context: ./collector
+  #     dockerfile: Dockerfile
+  #   container_name: trmnl-collector-prowlarr
+  #   restart: unless-stopped
+  #   environment:
+  #     - SERVARR_URL=http://prowlarr:9696
+  #     - API_KEY=your-prowlarr-api-key-here
+  #     - WEBHOOK_URL=https://usetrmnl.com/api/custom_plugins/your-prowlarr-webhook-id
+  #     - INTERVAL=900
+  #     - TZ=America/New_York
+  #   networks:
+  #     - servarr
+
+networks:
+  servarr:
+    external: true
+    # If your Servarr containers are on a different network, update this
+    # or create a new network and add it to your Servarr containers
+
+# ============================================
+# Alternative: Using Ofelia for Scheduling
+# ============================================
+# If you prefer a proper cron scheduler, use Ofelia:
+#
+# services:
+#   ofelia:
+#     image: mcuadros/ofelia:latest
+#     container_name: ofelia
+#     restart: unless-stopped
+#     command: daemon --docker
+#     volumes:
+#       - /var/run/docker.sock:/var/run/docker.sock:ro
+#     labels:
+#       ofelia.job-exec.trmnl-sonarr.schedule: "@every 15m"
+#       ofelia.job-exec.trmnl-sonarr.container: "trmnl-collector-sonarr"
+#       ofelia.job-exec.trmnl-sonarr.command: "/app/entrypoint.sh"
+#
+#   trmnl-collector-sonarr:
+#     build: ./collector
+#     container_name: trmnl-collector-sonarr
+#     environment:
+#       - SERVARR_URL=http://sonarr:8989
+#       - API_KEY=your-api-key
+#       - WEBHOOK_URL=https://usetrmnl.com/api/custom_plugins/xxx
+#     # Remove the command: loop since Ofelia handles scheduling
+#     command: tail -f /dev/null

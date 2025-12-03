@@ -1,0 +1,947 @@
+{% comment %}
+  Full Layout (800x480) - Servarr Dashboard
+  Supports: Dashboard mode (3-column) and Calendar modes (Daily, Weekly, Monthly)
+  Supports: Sonarr, Radarr, Lidarr, Readarr, Prowlarr
+{% endcomment %}
+
+{% assign display_mode = trmnl.plugin_settings.custom_fields_values.display_mode | default: "Dashboard" %}
+{% assign show_queue = trmnl.plugin_settings.custom_fields_values.show_queue | default: "Yes" %}
+{% assign show_calendar = trmnl.plugin_settings.custom_fields_values.show_calendar | default: "Yes" %}
+{% assign show_recently_added = trmnl.plugin_settings.custom_fields_values.show_recently_added | default: "Yes" %}
+{% assign show_stats = trmnl.plugin_settings.custom_fields_values.show_stats | default: "Yes" %}
+{% assign max_queue = trmnl.plugin_settings.custom_fields_values.max_queue_items | default: 3 %}
+{% assign show_health = trmnl.plugin_settings.custom_fields_values.show_health | default: "Yes" %}
+{% assign show_network = trmnl.plugin_settings.custom_fields_values.show_network | default: "Yes" %}
+{% assign show_quality = trmnl.plugin_settings.custom_fields_values.show_quality | default: "Yes" %}
+{% assign show_eta = trmnl.plugin_settings.custom_fields_values.show_eta | default: "Yes" %}
+{% assign date_format = trmnl.plugin_settings.custom_fields_values.date_format | default: "Relative" %}
+
+{% comment %} Calculate max items for middle column based on what's enabled {% endcomment %}
+{% if show_recently_added == "Yes" and show_calendar == "Yes" %}
+  {% assign max_middle_items = 3 %}
+{% else %}
+  {% assign max_middle_items = 6 %}
+{% endif %}
+
+{% comment %} SVG Icons {% endcomment %}
+{%- capture icon_tv -%}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>{%- endcapture -%}
+{%- capture icon_film -%}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>{%- endcapture -%}
+{%- capture icon_hdd -%}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>{%- endcapture -%}
+{%- capture icon_search -%}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>{%- endcapture -%}
+{%- capture icon_database -%}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>{%- endcapture -%}
+{%- capture icon_music -%}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>{%- endcapture -%}
+{%- capture icon_disc -%}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>{%- endcapture -%}
+{%- capture icon_book -%}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>{%- endcapture -%}
+{%- capture icon_user -%}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>{%- endcapture -%}
+{%- capture icon_list -%}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>{%- endcapture -%}
+{%- capture icon_check -%}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{%- endcapture -%}
+{%- capture icon_download -%}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>{%- endcapture -%}
+
+<style>
+  /* ===== DASHBOARD STYLES ===== */
+  .servarr-full {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    padding: 16px;
+    height: 430px;
+    box-sizing: border-box;
+  }
+  .servarr-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+  }
+  .servarr-col--queue {
+    width: 230px;
+    flex-shrink: 0;
+  }
+  .servarr-col--upcoming {
+    flex: 1;
+    min-width: 0;
+  }
+  .servarr-col--library {
+    width: 180px;
+    flex-shrink: 0;
+  }
+  .servarr-card {
+    background: white;
+    border: 3px solid black;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: 100%;
+    overflow: hidden;
+  }
+  .servarr-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #ccc;
+  }
+  .servarr-header-title {
+    font-family: 'DepartureMono', monospace;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  .servarr-badge {
+    font-family: 'DepartureMono', monospace;
+    font-size: 12px;
+    background: #e5e5e5;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .servarr-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+    flex: 1;
+  }
+  .servarr-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .servarr-item-title {
+    font-family: 'DepartureMono', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .servarr-item-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'DepartureMono', monospace;
+    font-size: 11px;
+    color: #333;
+  }
+  .servarr-progress {
+    width: 100%;
+    height: 4px;
+    background: #e5e5e5;
+    border-radius: 2px;
+  }
+  .servarr-progress-bar {
+    height: 100%;
+    background: black;
+    border-radius: 2px;
+  }
+  .servarr-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    flex: 1;
+  }
+  .servarr-stat-box {
+    border: 2px solid black;
+    border-radius: 6px;
+    padding: 6px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  .servarr-stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .servarr-stat-value {
+    font-family: 'DepartureMono', monospace;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 1;
+  }
+  .servarr-stat-label {
+    font-family: 'DepartureMono', monospace;
+    font-size: 10px;
+    color: #333;
+  }
+  .servarr-stat-full {
+    grid-column: span 2;
+  }
+  .servarr-empty {
+    font-family: 'DepartureMono', monospace;
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .servarr-col--split {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .servarr-card--half {
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ===== CALENDAR STYLES ===== */
+  .calendar-container {
+    padding: 12px;
+    height: 430px;
+    box-sizing: border-box;
+  }
+  .calendar-card {
+    background: white;
+    border: 3px solid black;
+    border-radius: 8px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 2px solid black;
+  }
+  .calendar-title {
+    font-family: 'DepartureMono', monospace;
+    font-size: 20px;
+    font-weight: bold;
+  }
+  .calendar-subtitle {
+    font-family: 'DepartureMono', monospace;
+    font-size: 12px;
+    color: #666;
+  }
+
+  /* Weekly Grid */
+  .calendar-week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    flex: 1;
+    overflow: hidden;
+  }
+  .calendar-day-col {
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .calendar-day-col:last-child {
+    border-right: none;
+  }
+  .calendar-day-header {
+    padding: 8px 4px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+    background: #f5f5f5;
+  }
+  .calendar-day-name {
+    font-family: 'DepartureMono', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  .calendar-day-date {
+    font-family: 'DepartureMono', monospace;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  .calendar-day-header.today {
+    background: black;
+    color: white;
+  }
+  .calendar-day-items {
+    flex: 1;
+    padding: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .calendar-event {
+    background: #f0f0f0;
+    border-left: 3px solid black;
+    padding: 4px 6px;
+    border-radius: 0 4px 4px 0;
+  }
+  .calendar-event-title {
+    font-family: 'DepartureMono', monospace;
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .calendar-event-time {
+    font-family: 'DepartureMono', monospace;
+    font-size: 9px;
+    color: #666;
+  }
+  .calendar-more {
+    font-family: 'DepartureMono', monospace;
+    font-size: 9px;
+    color: #666;
+    text-align: center;
+    padding: 2px;
+  }
+
+  /* Daily View */
+  .calendar-daily {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .calendar-daily-header {
+    padding: 16px;
+    text-align: center;
+    border-bottom: 2px solid black;
+    background: #f5f5f5;
+  }
+  .calendar-daily-date {
+    font-family: 'DepartureMono', monospace;
+    font-size: 32px;
+    font-weight: bold;
+  }
+  .calendar-daily-day {
+    font-family: 'DepartureMono', monospace;
+    font-size: 14px;
+    color: #666;
+  }
+  .calendar-daily-items {
+    flex: 1;
+    padding: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .calendar-daily-event {
+    background: #f5f5f5;
+    border: 2px solid black;
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .calendar-daily-event-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .calendar-daily-event-title {
+    font-family: 'DepartureMono', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .calendar-daily-event-meta {
+    font-family: 'DepartureMono', monospace;
+    font-size: 11px;
+    color: #666;
+  }
+  .calendar-daily-event-time {
+    font-family: 'DepartureMono', monospace;
+    font-size: 16px;
+    font-weight: bold;
+    padding-left: 12px;
+  }
+
+  /* Monthly Grid */
+  .calendar-month-grid {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+  .calendar-month-header-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #f5f5f5;
+    border-bottom: 2px solid black;
+  }
+  .calendar-month-header-cell {
+    padding: 6px;
+    text-align: center;
+    font-family: 'DepartureMono', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-right: 1px solid #ddd;
+  }
+  .calendar-month-header-cell:last-child {
+    border-right: none;
+  }
+  .calendar-month-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    flex: 1;
+  }
+  .calendar-month-cell {
+    border-right: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .calendar-month-cell:nth-child(7n) {
+    border-right: none;
+  }
+  .calendar-month-cell.other-month {
+    background: #fafafa;
+    color: #999;
+  }
+  .calendar-month-cell.today {
+    background: #f0f0f0;
+  }
+  .calendar-month-day-num {
+    font-family: 'DepartureMono', monospace;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 2px;
+  }
+  .calendar-month-cell.today .calendar-month-day-num {
+    background: black;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .calendar-month-events {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .calendar-month-event {
+    background: black;
+    color: white;
+    font-family: 'DepartureMono', monospace;
+    font-size: 8px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .calendar-month-more {
+    font-family: 'DepartureMono', monospace;
+    font-size: 8px;
+    color: #666;
+  }
+</style>
+
+{% case display_mode %}
+{% when "Calendar - Daily" %}
+<!-- ===== DAILY CALENDAR VIEW ===== -->
+<div class="calendar-container">
+  <div class="calendar-card">
+    <div class="calendar-header">
+      <div>
+        <div class="calendar-title">Today's Releases</div>
+        <div class="calendar-subtitle">{{ "now" | date: "%A, %B %d, %Y" }}</div>
+      </div>
+      <span class="servarr-badge">{% assign today_count = 0 %}{% for item in calendar.items %}{% if item.days_until == 0 %}{% assign today_count = today_count | plus: 1 %}{% endif %}{% endfor %}{{ today_count }}</span>
+    </div>
+    <div class="calendar-daily-items">
+      {% assign has_items = false %}
+      {% for item in calendar.items %}
+        {% if item.days_until == 0 %}
+          {% assign has_items = true %}
+          <div class="calendar-daily-event">
+            <div class="calendar-daily-event-info">
+              <div class="calendar-daily-event-title">{{ item.title }}</div>
+              <div class="calendar-daily-event-meta">
+                {% if show_network == "Yes" and item.network %}{{ item.network }}{% endif %}
+              </div>
+            </div>
+            {% if item.air_date_time %}
+            <div class="calendar-daily-event-time">{{ item.air_date_time | date: "%s" | plus: trmnl.user.utc_offset | date: "%H:%M" }}</div>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+      {% unless has_items %}
+        <div class="servarr-empty">No releases today</div>
+      {% endunless %}
+    </div>
+  </div>
+</div>
+
+{% when "Calendar - Weekly" %}
+<!-- ===== WEEKLY CALENDAR VIEW ===== -->
+{% comment %}
+  Weekly view always starts on Sunday.
+  We calculate today's day-of-week (0=Sun, 6=Sat) to find offset from Sunday.
+  Then each column shows Sun-Sat with proper days_until mapping.
+  Test data reference: Jan 15 = Wednesday (day 3 of week starting Sun Jan 12)
+{% endcomment %}
+{% assign today_dow = 3 %}{% comment %} Wednesday = 3 (Sun=0, Mon=1, Tue=2, Wed=3...) {% endcomment %}
+{% assign week_start_offset = 0 | minus: today_dow %}{% comment %} How many days back to Sunday {% endcomment %}
+<div class="calendar-container">
+  <div class="calendar-card">
+    <div class="calendar-header">
+      <div>
+        <div class="calendar-title">This Week</div>
+        <div class="calendar-subtitle">{{ calendar.count }} upcoming releases</div>
+      </div>
+    </div>
+    <div class="calendar-week-grid">
+      {% comment %} Generate 7 days: Sunday through Saturday {% endcomment %}
+      {% assign day_names = "Sun,Mon,Tue,Wed,Thu,Fri,Sat" | split: "," %}
+      {% assign day_nums = "12,13,14,15,16,17,18" | split: "," %}{% comment %} Week of Jan 12-18 {% endcomment %}
+      {% for col in (0..6) %}
+        {% assign col_days_until = col | minus: today_dow %}{% comment %} days_until relative to today {% endcomment %}
+        {% assign is_today = false %}
+        {% if col == today_dow %}{% assign is_today = true %}{% endif %}
+        <div class="calendar-day-col">
+          <div class="calendar-day-header{% if is_today %} today{% endif %}">
+            <div class="calendar-day-name">{{ day_names[col] }}</div>
+            <div class="calendar-day-date">{{ day_nums[col] }}</div>
+          </div>
+          <div class="calendar-day-items">
+            {% assign day_count = 0 %}
+            {% assign shown_count = 0 %}
+            {% for item in calendar.items %}
+              {% if item.days_until == col_days_until %}
+                {% assign day_count = day_count | plus: 1 %}
+                {% if shown_count < 3 %}
+                  <div class="calendar-event">
+                    <div class="calendar-event-title">{{ item.title }}</div>
+                    {% if item.air_date_time %}<div class="calendar-event-time">{{ item.air_date_time | date: "%s" | plus: trmnl.user.utc_offset | date: "%H:%M" }}</div>{% endif %}
+                  </div>
+                  {% assign shown_count = shown_count | plus: 1 %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {% assign remaining = day_count | minus: shown_count %}
+            {% if remaining > 0 %}
+              <div class="calendar-more">+{{ remaining }} more</div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% when "Calendar - Monthly" %}
+<!-- ===== MONTHLY CALENDAR VIEW ===== -->
+<div class="calendar-container">
+  <div class="calendar-card">
+    <div class="calendar-header">
+      <div>
+        <div class="calendar-title">January 2025</div>
+        <div class="calendar-subtitle">{{ calendar.count }} releases this month</div>
+      </div>
+    </div>
+    <div class="calendar-month-grid">
+      <div class="calendar-month-header-row">
+        <div class="calendar-month-header-cell">Sun</div>
+        <div class="calendar-month-header-cell">Mon</div>
+        <div class="calendar-month-header-cell">Tue</div>
+        <div class="calendar-month-header-cell">Wed</div>
+        <div class="calendar-month-header-cell">Thu</div>
+        <div class="calendar-month-header-cell">Fri</div>
+        <div class="calendar-month-header-cell">Sat</div>
+      </div>
+      <div class="calendar-month-body">
+        {% comment %} Week 1: Dec 29-Jan 4 {% endcomment %}
+        {% for d in (29..31) %}<div class="calendar-month-cell other-month"><div class="calendar-month-day-num">{{ d }}</div></div>{% endfor %}
+        {% for d in (1..4) %}
+          <div class="calendar-month-cell">
+            <div class="calendar-month-day-num">{{ d }}</div>
+            <div class="calendar-month-events">
+              {% for item in calendar.items %}{% assign item_day = item.air_date | date: "%d" | plus: 0 %}{% if item_day == d %}{% assign item_month = item.air_date | date: "%m" | plus: 0 %}{% if item_month == 1 %}<div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>{% endif %}{% endif %}{% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+
+        {% comment %} Week 2: Jan 5-11 {% endcomment %}
+        {% for d in (5..11) %}
+          <div class="calendar-month-cell">
+            <div class="calendar-month-day-num">{{ d }}</div>
+            <div class="calendar-month-events">
+              {% for item in calendar.items %}{% assign item_day = item.air_date | date: "%d" | plus: 0 %}{% if item_day == d %}{% assign item_month = item.air_date | date: "%m" | plus: 0 %}{% if item_month == 1 %}<div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>{% endif %}{% endif %}{% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+
+        {% comment %} Week 3: Jan 12-18 {% endcomment %}
+        {% for d in (12..18) %}
+          <div class="calendar-month-cell{% if d == 15 %} today{% endif %}">
+            <div class="calendar-month-day-num">{{ d }}</div>
+            <div class="calendar-month-events">
+              {% assign event_count = 0 %}
+              {% for item in calendar.items %}
+                {% assign item_day = item.air_date | date: "%d" | plus: 0 %}
+                {% if item_day == d %}
+                  {% assign item_month = item.air_date | date: "%m" | plus: 0 %}
+                  {% if item_month == 1 %}
+                    {% if event_count < 2 %}
+                      <div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>
+                    {% endif %}
+                    {% assign event_count = event_count | plus: 1 %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+              {% if event_count > 2 %}
+                <div class="calendar-month-more">+{{ event_count | minus: 2 }} more</div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+
+        {% comment %} Week 4: Jan 19-25 {% endcomment %}
+        {% for d in (19..25) %}
+          <div class="calendar-month-cell">
+            <div class="calendar-month-day-num">{{ d }}</div>
+            <div class="calendar-month-events">
+              {% assign event_count = 0 %}
+              {% for item in calendar.items %}
+                {% assign item_day = item.air_date | date: "%d" | plus: 0 %}
+                {% if item_day == d %}
+                  {% assign item_month = item.air_date | date: "%m" | plus: 0 %}
+                  {% if item_month == 1 %}
+                    {% if event_count < 2 %}
+                      <div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>
+                    {% endif %}
+                    {% assign event_count = event_count | plus: 1 %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+              {% if event_count > 2 %}
+                <div class="calendar-month-more">+{{ event_count | minus: 2 }} more</div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+
+        {% comment %} Week 5: Jan 26-Feb 1 {% endcomment %}
+        {% for d in (26..31) %}
+          <div class="calendar-month-cell">
+            <div class="calendar-month-day-num">{{ d }}</div>
+            <div class="calendar-month-events">
+              {% assign event_count = 0 %}
+              {% for item in calendar.items %}
+                {% assign item_day = item.air_date | date: "%d" | plus: 0 %}
+                {% if item_day == d %}
+                  {% assign item_month = item.air_date | date: "%m" | plus: 0 %}
+                  {% if item_month == 1 %}
+                    {% if event_count < 2 %}
+                      <div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>
+                    {% endif %}
+                    {% assign event_count = event_count | plus: 1 %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+              {% if event_count > 2 %}
+                <div class="calendar-month-more">+{{ event_count | minus: 2 }} more</div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+        <div class="calendar-month-cell other-month"><div class="calendar-month-day-num">1</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<!-- ===== DASHBOARD VIEW (Default) ===== -->
+<div class="servarr-full">
+
+  <!-- Queue Column -->
+  {% if show_queue == "Yes" %}
+  <div class="servarr-col servarr-col--queue">
+    <div class="servarr-card">
+      <div class="servarr-header">
+        <span class="servarr-header-title">Queue</span>
+        <span class="servarr-badge">{{ queue.count | default: 0 }}</span>
+      </div>
+      <div class="servarr-content">
+        {% if queue.items and queue.items.size > 0 %}
+          {% for item in queue.items limit: max_queue %}
+            <div class="servarr-item">
+              <div class="servarr-item-title">{{ item.title | truncate: 28 }}</div>
+              <div class="servarr-item-meta">
+                {% if show_quality == "Yes" %}<span>{{ item.quality }}</span>{% endif %}
+                {% if show_eta == "Yes" %}<span>{{ item.eta }}</span>{% endif %}
+              </div>
+              <div class="servarr-progress">
+                <div class="servarr-progress-bar" style="width: {{ item.progress | default: 0 }}%;"></div>
+              </div>
+            </div>
+          {% endfor %}
+          {% assign remaining = queue.count | minus: max_queue %}
+          {% if remaining > 0 %}
+            <div class="servarr-empty">+{{ remaining }} more</div>
+          {% endif %}
+        {% else %}
+          <div class="servarr-empty">Queue empty</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Middle Column: Recently Added + Upcoming -->
+  {% if show_recently_added == "Yes" or show_calendar == "Yes" %}
+  <div class="servarr-col servarr-col--upcoming{% if show_recently_added == "Yes" and show_calendar == "Yes" %} servarr-col--split{% endif %}">
+
+    {% if show_recently_added == "Yes" %}
+    <div class="servarr-card{% if show_calendar == "Yes" %} servarr-card--half{% endif %}">
+      <div class="servarr-header">
+        <span class="servarr-header-title">Recently Added</span>
+        <span class="servarr-badge">{{ recently_added.count | default: 0 }}</span>
+      </div>
+      <div class="servarr-content">
+        {% if recently_added.items and recently_added.items.size > 0 %}
+          {% for item in recently_added.items limit: max_middle_items %}
+            <div class="servarr-item">
+              <div class="servarr-item-title">{{ item.title | truncate: 35 }}</div>
+              <div class="servarr-item-meta">
+                <span>{{ item.time_ago }}</span>
+              </div>
+            </div>
+          {% endfor %}
+          {% assign remaining_added = recently_added.count | minus: max_middle_items %}
+          {% if remaining_added > 0 %}
+            <div class="servarr-empty">+{{ remaining_added }} more</div>
+          {% endif %}
+        {% else %}
+          <div class="servarr-empty">Nothing recent</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if show_calendar == "Yes" %}
+    <div class="servarr-card{% if show_recently_added == "Yes" %} servarr-card--half{% endif %}">
+      <div class="servarr-header">
+        <span class="servarr-header-title">Upcoming</span>
+        <span class="servarr-badge">{{ calendar.count | default: 0 }}</span>
+      </div>
+      <div class="servarr-content">
+        {% if calendar.items and calendar.items.size > 0 %}
+          {% for item in calendar.items limit: max_middle_items %}
+            <div class="servarr-item">
+              <div class="servarr-item-title">{{ item.title | truncate: 35 }}</div>
+              <div class="servarr-item-meta">
+                <span>
+                  {% case date_format %}
+                    {% when "Relative" %}
+                      {% if item.days_until == 0 %}Today{% elsif item.days_until == 1 %}Tomorrow{% else %}{{ item.air_date | date: "%b %d" }}{% endif %}
+                    {% when "Short" %}
+                      {{ item.air_date | date: "%b %d" }}
+                    {% when "Full" %}
+                      {{ item.air_date | date: "%B %d" }}
+                    {% else %}
+                      {% if item.days_until == 0 %}Today{% elsif item.days_until == 1 %}Tomorrow{% else %}{{ item.air_date | date: "%b %d" }}{% endif %}
+                  {% endcase %}
+                  {% if item.air_date_time %} {{ item.air_date_time | date: "%s" | plus: trmnl.user.utc_offset | date: "%H:%M" }}{% endif %}
+                </span>
+                {% if show_network == "Yes" and item.network %}
+                  <span>{{ item.network }}</span>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+          {% assign remaining_cal = calendar.count | minus: max_middle_items %}
+          {% if remaining_cal > 0 %}
+            <div class="servarr-empty">+{{ remaining_cal }} more</div>
+          {% endif %}
+        {% else %}
+          <div class="servarr-empty">Nothing scheduled</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+  {% endif %}
+
+  <!-- Library Column -->
+  {% if show_stats == "Yes" %}
+  <div class="servarr-col servarr-col--library">
+    <div class="servarr-card">
+      <div class="servarr-header">
+        <span class="servarr-header-title">Library</span>
+        {% if show_health == "Yes" and health.status %}
+          <span class="servarr-badge">{{ health.status | capitalize }}</span>
+        {% endif %}
+      </div>
+      <div class="servarr-content">
+        <div class="servarr-stats-grid">
+          {% case app_type %}
+            {% when "sonarr" %}
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_tv }}</span>
+                <span class="servarr-stat-value">{{ stats.total_series | default: "0" }}</span>
+                <span class="servarr-stat-label">Series</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_film }}</span>
+                <span class="servarr-stat-value">{{ stats.total_episodes | default: "0" }}</span>
+                <span class="servarr-stat-label">Episodes</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_hdd }}</span>
+                <span class="servarr-stat-value">{{ stats.episodes_on_disk | default: "0" }}</span>
+                <span class="servarr-stat-label">On Disk</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_search }}</span>
+                <span class="servarr-stat-value">{{ stats.monitored_missing | default: "0" }}</span>
+                <span class="servarr-stat-label">Wanted</span>
+              </div>
+              {% if stats.library_size_formatted %}
+              <div class="servarr-stat-box servarr-stat-full">
+                <span class="servarr-stat-icon">{{ icon_database }}</span>
+                <span class="servarr-stat-value">{{ stats.library_size_formatted }}</span>
+                <span class="servarr-stat-label">Size</span>
+              </div>
+              {% endif %}
+
+            {% when "radarr" %}
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_film }}</span>
+                <span class="servarr-stat-value">{{ stats.total_movies | default: "0" }}</span>
+                <span class="servarr-stat-label">Movies</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_hdd }}</span>
+                <span class="servarr-stat-value">{{ stats.movies_on_disk | default: "0" }}</span>
+                <span class="servarr-stat-label">On Disk</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_search }}</span>
+                <span class="servarr-stat-value">{{ stats.movies_missing | default: "0" }}</span>
+                <span class="servarr-stat-label">Missing</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_search }}</span>
+                <span class="servarr-stat-value">{{ stats.monitored_missing | default: "0" }}</span>
+                <span class="servarr-stat-label">Wanted</span>
+              </div>
+              {% if stats.library_size_formatted %}
+              <div class="servarr-stat-box servarr-stat-full">
+                <span class="servarr-stat-icon">{{ icon_database }}</span>
+                <span class="servarr-stat-value">{{ stats.library_size_formatted }}</span>
+                <span class="servarr-stat-label">Size</span>
+              </div>
+              {% endif %}
+
+            {% when "lidarr" %}
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_user }}</span>
+                <span class="servarr-stat-value">{{ stats.total_artists | default: "0" }}</span>
+                <span class="servarr-stat-label">Artists</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_disc }}</span>
+                <span class="servarr-stat-value">{{ stats.total_albums | default: "0" }}</span>
+                <span class="servarr-stat-label">Albums</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_music }}</span>
+                <span class="servarr-stat-value">{{ stats.total_tracks | default: "0" }}</span>
+                <span class="servarr-stat-label">Tracks</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_search }}</span>
+                <span class="servarr-stat-value">{{ stats.monitored_missing | default: "0" }}</span>
+                <span class="servarr-stat-label">Wanted</span>
+              </div>
+              {% if stats.library_size_formatted %}
+              <div class="servarr-stat-box servarr-stat-full">
+                <span class="servarr-stat-icon">{{ icon_database }}</span>
+                <span class="servarr-stat-value">{{ stats.library_size_formatted }}</span>
+                <span class="servarr-stat-label">Size</span>
+              </div>
+              {% endif %}
+
+            {% when "readarr" %}
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_user }}</span>
+                <span class="servarr-stat-value">{{ stats.total_authors | default: "0" }}</span>
+                <span class="servarr-stat-label">Authors</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_book }}</span>
+                <span class="servarr-stat-value">{{ stats.total_books | default: "0" }}</span>
+                <span class="servarr-stat-label">Books</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_hdd }}</span>
+                <span class="servarr-stat-value">{{ stats.books_on_disk | default: "0" }}</span>
+                <span class="servarr-stat-label">On Disk</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_search }}</span>
+                <span class="servarr-stat-value">{{ stats.monitored_missing | default: "0" }}</span>
+                <span class="servarr-stat-label">Wanted</span>
+              </div>
+              {% if stats.library_size_formatted %}
+              <div class="servarr-stat-box servarr-stat-full">
+                <span class="servarr-stat-icon">{{ icon_database }}</span>
+                <span class="servarr-stat-value">{{ stats.library_size_formatted }}</span>
+                <span class="servarr-stat-label">Size</span>
+              </div>
+              {% endif %}
+
+            {% when "prowlarr" %}
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_list }}</span>
+                <span class="servarr-stat-value">{{ stats.total_indexers | default: "0" }}</span>
+                <span class="servarr-stat-label">Indexers</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_check }}</span>
+                <span class="servarr-stat-value">{{ stats.enabled_indexers | default: "0" }}</span>
+                <span class="servarr-stat-label">Enabled</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_download }}</span>
+                <span class="servarr-stat-value">{{ stats.total_grabs | default: "0" }}</span>
+                <span class="servarr-stat-label">Grabs</span>
+              </div>
+              <div class="servarr-stat-box">
+                <span class="servarr-stat-icon">{{ icon_search }}</span>
+                <span class="servarr-stat-value">{{ stats.total_queries | default: "0" }}</span>
+                <span class="servarr-stat-label">Queries</span>
+              </div>
+
+            {% else %}
+              <div class="servarr-empty" style="grid-column: span 2;">No stats</div>
+          {% endcase %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endcase %}
+
+<div class="title_bar">
+  <span class="title">{{ app_name | default: "Servarr" }}</span>
+  <span class="instance">{{ last_updated | date: "%s" | plus: trmnl.user.utc_offset | date: "%H:%M" }}</span>
+</div>

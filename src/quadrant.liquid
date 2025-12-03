@@ -1,0 +1,272 @@
+{% comment %}
+  Quadrant Layout (400x240)
+  Servarr Dashboard - Minimal summary view
+  Queue count, next release, key stats
+  Supports: Sonarr, Radarr, Lidarr, Readarr, Prowlarr
+{% endcomment %}
+
+{% assign show_health = trmnl.plugin_settings.custom_fields_values.show_health | default: "Yes" %}
+{% assign show_calendar = trmnl.plugin_settings.custom_fields_values.show_calendar | default: "Yes" %}
+{% assign date_format = trmnl.plugin_settings.custom_fields_values.date_format | default: "Relative" %}
+
+{%- capture icon_download -%}<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>{%- endcapture -%}
+{%- capture icon_tv -%}<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>{%- endcapture -%}
+{%- capture icon_film -%}<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>{%- endcapture -%}
+{%- capture icon_hdd -%}<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>{%- endcapture -%}
+{%- capture icon_user -%}<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>{%- endcapture -%}
+{%- capture icon_book -%}<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>{%- endcapture -%}
+{%- capture icon_list -%}<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>{%- endcapture -%}
+{%- capture icon_calendar -%}<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{%- endcapture -%}
+
+<style>
+  .servarr-quad {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    padding: 10px;
+    height: 190px;
+    box-sizing: border-box;
+  }
+  .servarr-card {
+    background: white;
+    border: 2px solid black;
+    border-radius: 6px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .servarr-card--queue {
+    width: 120px;
+    flex-shrink: 0;
+    justify-content: center;
+    align-items: center;
+  }
+  .servarr-card--main {
+    flex: 1;
+    min-width: 0;
+  }
+  .servarr-queue-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+  .servarr-queue-value {
+    font-family: 'DepartureMono', monospace;
+    font-size: 36px;
+    font-weight: bold;
+    line-height: 1;
+  }
+  .servarr-queue-label {
+    font-family: 'DepartureMono', monospace;
+    font-size: 10px;
+    color: #666;
+  }
+  .servarr-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .servarr-section-header {
+    font-family: 'DepartureMono', monospace;
+    font-size: 10px;
+    color: #666;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .servarr-next-title {
+    font-family: 'DepartureMono', monospace;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .servarr-next-meta {
+    font-family: 'DepartureMono', monospace;
+    font-size: 10px;
+    color: #333;
+  }
+  .servarr-stats-row {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    margin-top: auto;
+  }
+  .servarr-stat-mini {
+    border: 1px solid black;
+    border-radius: 4px;
+    padding: 6px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    flex: 1;
+  }
+  .servarr-stat-mini-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .servarr-stat-mini-value {
+    font-family: 'DepartureMono', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1;
+  }
+  .servarr-stat-mini-label {
+    font-family: 'DepartureMono', monospace;
+    font-size: 8px;
+    color: #333;
+  }
+  .servarr-empty {
+    font-family: 'DepartureMono', monospace;
+    font-size: 10px;
+    color: #666;
+  }
+  .servarr-health {
+    font-family: 'DepartureMono', monospace;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: #e5e5e5;
+  }
+</style>
+
+<div class="servarr-quad">
+
+  <!-- Queue Card (Left) -->
+  <div class="servarr-card servarr-card--queue">
+    <div class="servarr-queue-icon">{{ icon_download }}</div>
+    <div class="servarr-queue-value">{{ queue.count | default: 0 }}</div>
+    <div class="servarr-queue-label">
+      {% if queue.count == 1 %}downloading{% else %}in queue{% endif %}
+    </div>
+  </div>
+
+  <!-- Main Card (Right) -->
+  <div class="servarr-card servarr-card--main">
+
+    <!-- Next Upcoming -->
+    {% if show_calendar == "Yes" %}
+    <div class="servarr-section">
+      <div class="servarr-section-header">{{ icon_calendar }} Next Up</div>
+      {% if calendar.items and calendar.items.size > 0 %}
+        {% assign next_item = calendar.items | first %}
+        <div class="servarr-next-title">{{ next_item.title | truncate: 28 }}</div>
+        <div class="servarr-next-meta">
+          {% case date_format %}
+            {% when "Relative" %}
+              {% if next_item.days_until == 0 %}Today{% elsif next_item.days_until == 1 %}Tomorrow{% else %}{{ next_item.air_date | date: "%b %d" }}{% endif %}
+            {% when "Short" %}
+              {{ next_item.air_date | date: "%b %d" }}
+            {% else %}
+              {% if next_item.days_until == 0 %}Today{% elsif next_item.days_until == 1 %}Tomorrow{% else %}{{ next_item.air_date | date: "%b %d" }}{% endif %}
+          {% endcase %}
+          {% if next_item.air_date_time %} {{ next_item.air_date_time | date: "%s" | plus: trmnl.user.utc_offset | date: "%H:%M" }}{% endif %}
+        </div>
+      {% else %}
+        <div class="servarr-empty">Nothing scheduled</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Stats Row -->
+    <div class="servarr-stats-row">
+      {% case app_type %}
+        {% when "sonarr" %}
+          <div class="servarr-stat-mini">
+            <span class="servarr-stat-mini-icon">{{ icon_tv }}</span>
+            <span class="servarr-stat-mini-value">{{ stats.total_series | default: "0" }}</span>
+            <span class="servarr-stat-mini-label">Series</span>
+          </div>
+          <div class="servarr-stat-mini">
+            <span class="servarr-stat-mini-icon">{{ icon_hdd }}</span>
+            <span class="servarr-stat-mini-value">{{ stats.episodes_on_disk | default: "0" }}</span>
+            <span class="servarr-stat-mini-label">Episodes</span>
+          </div>
+        {% when "radarr" %}
+          <div class="servarr-stat-mini">
+            <span class="servarr-stat-mini-icon">{{ icon_film }}</span>
+            <span class="servarr-stat-mini-value">{{ stats.total_movies | default: "0" }}</span>
+            <span class="servarr-stat-mini-label">Movies</span>
+          </div>
+          <div class="servarr-stat-mini">
+            <span class="servarr-stat-mini-icon">{{ icon_hdd }}</span>
+            <span class="servarr-stat-mini-value">{{ stats.movies_on_disk | default: "0" }}</span>
+            <span class="servarr-stat-mini-label">On Disk</span>
+          </div>
+        {% when "lidarr" %}
+          <div class="servarr-stat-mini">
+            <span class="servarr-stat-mini-icon">{{ icon_user }}</span>
+            <span class="servarr-stat-mini-value">{{ stats.total_artists | default: "0" }}</span>
+            <span class="servarr-stat-mini-label">Artists</span>
+          </div>
+          <div class="servarr-stat-mini">
+            <span class="servarr-stat-mini-icon">{{ icon_hdd }}</span>
+            <span class="servarr-stat-mini-value">{{ stats.total_albums | default: "0" }}</span>
+            <span class="servarr-stat-mini-label">Albums</span>
+          </div>
+        {% when "readarr" %}
+          <div class="servarr-stat-mini">
+            <span class="servarr-stat-mini-icon">{{ icon_user }}</span>
+            <span class="servarr-stat-mini-value">{{ stats.total_authors | default: "0" }}</span>
+            <span class="servarr-stat-mini-label">Authors</span>
+          </div>
+          <div class="servarr-stat-mini">
+            <span class="servarr-stat-mini-icon">{{ icon_book }}</span>
+            <span class="servarr-stat-mini-value">{{ stats.total_books | default: "0" }}</span>
+            <span class="servarr-stat-mini-label">Books</span>
+          </div>
+        {% when "prowlarr" %}
+          <div class="servarr-stat-mini">
+            <span class="servarr-stat-mini-icon">{{ icon_list }}</span>
+            <span class="servarr-stat-mini-value">{{ stats.total_indexers | default: "0" }}</span>
+            <span class="servarr-stat-mini-label">Indexers</span>
+          </div>
+          <div class="servarr-stat-mini">
+            <span class="servarr-stat-mini-icon">{{ icon_list }}</span>
+            <span class="servarr-stat-mini-value">{{ stats.enabled_indexers | default: "0" }}</span>
+            <span class="servarr-stat-mini-label">Active</span>
+          </div>
+        {% else %}
+          <div class="servarr-stat-mini">
+            <span class="servarr-stat-mini-value">{{ queue.count | default: "0" }}</span>
+            <span class="servarr-stat-mini-label">Queue</span>
+          </div>
+      {% endcase %}
+
+      {% if show_health == "Yes" and health.status %}
+        <div class="servarr-stat-mini">
+          <span class="servarr-health">
+            {% case health.status %}
+              {% when "ok" %}OK
+              {% when "warning" %}Warn
+              {% when "error" %}Error
+              {% else %}--
+            {% endcase %}
+          </span>
+          <span class="servarr-stat-mini-label">Health</span>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+</div>
+
+<div class="title_bar">
+  <span class="title">{{ app_name | default: "Servarr" }}</span>
+  <span class="instance">
+    {% if last_updated %}
+      {{ last_updated | date: "%s" | plus: trmnl.user.utc_offset | date: "%H:%M" }}
+    {% else %}
+      --:--
+    {% endif %}
+  </span>
+</div>

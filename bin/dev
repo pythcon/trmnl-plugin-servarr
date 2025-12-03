@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#
+# Development server startup script for TRMNL Servarr Plugin
+# Starts the trmnlp local development server with auto-reload
+#
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${GREEN}Starting TRMNL Plugin Development Server${NC}"
+echo "========================================"
+
+# Check if trmnlp is installed
+if ! command -v trmnlp &> /dev/null; then
+    echo -e "${RED}Error: trmnlp is not installed${NC}"
+    echo ""
+    echo "Install via RubyGems:"
+    echo "  gem install trmnlp"
+    echo ""
+    echo "Or use Docker:"
+    echo "  docker run -v \$(pwd):/plugin trmnl/trmnlp serve"
+    exit 1
+fi
+
+# Change to project root directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
+cd "$PROJECT_DIR"
+
+echo -e "${YELLOW}Project: ${PROJECT_DIR}${NC}"
+echo ""
+
+# Start the development server
+exec trmnlp serve
