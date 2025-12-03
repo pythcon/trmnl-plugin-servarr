@@ -4,20 +4,20 @@
   Supports: Sonarr, Radarr, Lidarr, Readarr, Prowlarr
 {% endcomment %}
 
-{% assign display_mode = trmnl.plugin_settings.custom_fields_values.display_mode | default: "Dashboard" %}
-{% assign show_queue = trmnl.plugin_settings.custom_fields_values.show_queue | default: "Yes" %}
-{% assign show_calendar = trmnl.plugin_settings.custom_fields_values.show_calendar | default: "Yes" %}
-{% assign show_recently_added = trmnl.plugin_settings.custom_fields_values.show_recently_added | default: "Yes" %}
-{% assign show_stats = trmnl.plugin_settings.custom_fields_values.show_stats | default: "Yes" %}
+{% assign display_mode = trmnl.plugin_settings.custom_fields_values.display_mode | default: "dashboard" %}
+{% assign show_queue = trmnl.plugin_settings.custom_fields_values.show_queue | default: "yes" %}
+{% assign show_calendar = trmnl.plugin_settings.custom_fields_values.show_calendar | default: "yes" %}
+{% assign show_recently_added = trmnl.plugin_settings.custom_fields_values.show_recently_added | default: "yes" %}
+{% assign show_stats = trmnl.plugin_settings.custom_fields_values.show_stats | default: "yes" %}
 {% assign max_queue = trmnl.plugin_settings.custom_fields_values.max_queue_items | default: 3 %}
-{% assign show_health = trmnl.plugin_settings.custom_fields_values.show_health | default: "Yes" %}
-{% assign show_network = trmnl.plugin_settings.custom_fields_values.show_network | default: "Yes" %}
-{% assign show_quality = trmnl.plugin_settings.custom_fields_values.show_quality | default: "Yes" %}
-{% assign show_eta = trmnl.plugin_settings.custom_fields_values.show_eta | default: "Yes" %}
-{% assign date_format = trmnl.plugin_settings.custom_fields_values.date_format | default: "Relative" %}
+{% assign show_health = trmnl.plugin_settings.custom_fields_values.show_health | default: "yes" %}
+{% assign show_network = trmnl.plugin_settings.custom_fields_values.show_network | default: "yes" %}
+{% assign show_quality = trmnl.plugin_settings.custom_fields_values.show_quality | default: "yes" %}
+{% assign show_eta = trmnl.plugin_settings.custom_fields_values.show_eta | default: "yes" %}
+{% assign date_format = trmnl.plugin_settings.custom_fields_values.date_format | default: "relative" %}
 
 {% comment %} Calculate max items for middle column based on what's enabled {% endcomment %}
-{% if show_recently_added == "Yes" and show_calendar == "Yes" %}
+{% if show_recently_added == "yes" and show_calendar == "yes" %}
   {% assign max_middle_items = 3 %}
 {% else %}
   {% assign max_middle_items = 6 %}
@@ -449,7 +449,7 @@
 </style>
 
 {% case display_mode %}
-{% when "Calendar - Daily" %}
+{% when "calendar_-_daily" %}
 <!-- ===== DAILY CALENDAR VIEW ===== -->
 <div class="calendar-container">
   <div class="calendar-card">
@@ -469,7 +469,7 @@
             <div class="calendar-daily-event-info">
               <div class="calendar-daily-event-title">{{ item.title }}</div>
               <div class="calendar-daily-event-meta">
-                {% if show_network == "Yes" and item.network %}{{ item.network }}{% endif %}
+                {% if show_network == "yes" and item.network %}{{ item.network }}{% endif %}
               </div>
             </div>
             {% if item.air_date_time %}
@@ -485,7 +485,7 @@
   </div>
 </div>
 
-{% when "Calendar - Weekly" %}
+{% when "calendar_-_weekly" %}
 <!-- ===== WEEKLY CALENDAR VIEW ===== -->
 {% comment %}
   Weekly view always starts on Sunday.
@@ -542,7 +542,7 @@
   </div>
 </div>
 
-{% when "Calendar - Monthly" %}
+{% when "calendar_-_monthly" %}
 <!-- ===== MONTHLY CALENDAR VIEW ===== -->
 <div class="calendar-container">
   <div class="calendar-card">
@@ -669,7 +669,7 @@
 <div class="servarr-full">
 
   <!-- Queue Column -->
-  {% if show_queue == "Yes" %}
+  {% if show_queue == "yes" %}
   <div class="servarr-col servarr-col--queue">
     <div class="servarr-card">
       <div class="servarr-header">
@@ -682,8 +682,8 @@
             <div class="servarr-item">
               <div class="servarr-item-title">{{ item.title | truncate: 28 }}</div>
               <div class="servarr-item-meta">
-                {% if show_quality == "Yes" %}<span>{{ item.quality }}</span>{% endif %}
-                {% if show_eta == "Yes" %}<span>{{ item.eta }}</span>{% endif %}
+                {% if show_quality == "yes" %}<span>{{ item.quality }}</span>{% endif %}
+                {% if show_eta == "yes" %}<span>{{ item.eta }}</span>{% endif %}
               </div>
               <div class="servarr-progress">
                 <div class="servarr-progress-bar" style="width: {{ item.progress | default: 0 }}%;"></div>
@@ -703,11 +703,11 @@
   {% endif %}
 
   <!-- Middle Column: Recently Added + Upcoming -->
-  {% if show_recently_added == "Yes" or show_calendar == "Yes" %}
-  <div class="servarr-col servarr-col--upcoming{% if show_recently_added == "Yes" and show_calendar == "Yes" %} servarr-col--split{% endif %}">
+  {% if show_recently_added == "yes" or show_calendar == "yes" %}
+  <div class="servarr-col servarr-col--upcoming{% if show_recently_added == "yes" and show_calendar == "yes" %} servarr-col--split{% endif %}">
 
-    {% if show_recently_added == "Yes" %}
-    <div class="servarr-card{% if show_calendar == "Yes" %} servarr-card--half{% endif %}">
+    {% if show_recently_added == "yes" %}
+    <div class="servarr-card{% if show_calendar == "yes" %} servarr-card--half{% endif %}">
       <div class="servarr-header">
         <span class="servarr-header-title">Recently Added</span>
         <span class="servarr-badge">{{ recently_added.count | default: 0 }}</span>
@@ -733,8 +733,8 @@
     </div>
     {% endif %}
 
-    {% if show_calendar == "Yes" %}
-    <div class="servarr-card{% if show_recently_added == "Yes" %} servarr-card--half{% endif %}">
+    {% if show_calendar == "yes" %}
+    <div class="servarr-card{% if show_recently_added == "yes" %} servarr-card--half{% endif %}">
       <div class="servarr-header">
         <span class="servarr-header-title">Upcoming</span>
         <span class="servarr-badge">{{ calendar.count | default: 0 }}</span>
@@ -747,18 +747,18 @@
               <div class="servarr-item-meta">
                 <span>
                   {% case date_format %}
-                    {% when "Relative" %}
+                    {% when "relative" %}
                       {% if item.days_until == 0 %}Today{% elsif item.days_until == 1 %}Tomorrow{% else %}{{ item.air_date | date: "%b %d" }}{% endif %}
-                    {% when "Short" %}
+                    {% when "short" %}
                       {{ item.air_date | date: "%b %d" }}
-                    {% when "Full" %}
+                    {% when "full" %}
                       {{ item.air_date | date: "%B %d" }}
                     {% else %}
                       {% if item.days_until == 0 %}Today{% elsif item.days_until == 1 %}Tomorrow{% else %}{{ item.air_date | date: "%b %d" }}{% endif %}
                   {% endcase %}
                   {% if item.air_date_time %} {{ item.air_date_time | date: "%s" | plus: trmnl.user.utc_offset | date: "%H:%M" }}{% endif %}
                 </span>
-                {% if show_network == "Yes" and item.network %}
+                {% if show_network == "yes" and item.network %}
                   <span>{{ item.network }}</span>
                 {% endif %}
               </div>
@@ -779,12 +779,12 @@
   {% endif %}
 
   <!-- Library Column -->
-  {% if show_stats == "Yes" %}
+  {% if show_stats == "yes" %}
   <div class="servarr-col servarr-col--library">
     <div class="servarr-card">
       <div class="servarr-header">
         <span class="servarr-header-title">Library</span>
-        {% if show_health == "Yes" and health.status %}
+        {% if show_health == "yes" and health.status %}
           <span class="servarr-badge">{{ health.status | capitalize }}</span>
         {% endif %}
       </div>

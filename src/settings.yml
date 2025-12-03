@@ -18,7 +18,7 @@ custom_fields:
   - Calendar - Daily
   - Calendar - Weekly
   - Calendar - Monthly
-  default: Dashboard
+  default: dashboard
 - keyname: show_queue
   field_type: select
   name: Show Download Queue
@@ -26,7 +26,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'Yes'
+  default: 'yes'
 - keyname: show_calendar
   field_type: select
   name: Show Upcoming Releases
@@ -34,7 +34,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'Yes'
+  default: 'yes'
 - keyname: show_recently_added
   field_type: select
   name: Show Recently Added
@@ -42,7 +42,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'Yes'
+  default: 'yes'
 - keyname: show_stats
   field_type: select
   name: Show Library Statistics
@@ -50,7 +50,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'Yes'
+  default: 'yes'
 - keyname: max_queue_items
   field_type: number
   name: Max Queue Items
@@ -66,7 +66,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'Yes'
+  default: 'yes'
 - keyname: show_library_size
   field_type: select
   name: Show Library Size
@@ -74,7 +74,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'Yes'
+  default: 'yes'
 - keyname: show_wanted
   field_type: select
   name: Show Wanted Count
@@ -82,7 +82,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'Yes'
+  default: 'yes'
 - keyname: show_network
   field_type: select
   name: Show Network/Studio
@@ -90,7 +90,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'Yes'
+  default: 'yes'
 - keyname: show_quality
   field_type: select
   name: Show Quality in Queue
@@ -98,7 +98,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'Yes'
+  default: 'yes'
 - keyname: show_eta
   field_type: select
   name: Show ETA in Queue
@@ -106,7 +106,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'Yes'
+  default: 'yes'
 - keyname: date_format
   field_type: select
   name: Date Format
@@ -115,7 +115,7 @@ custom_fields:
   - Relative
   - Short
   - Full
-  default: Relative
+  default: relative
 - keyname: calendar_days
   field_type: number
   name: Calendar Days Ahead

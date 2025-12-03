@@ -5,14 +5,14 @@
   Supports: Sonarr, Radarr, Lidarr, Readarr, Prowlarr
 {% endcomment %}
 
-{% assign show_queue = trmnl.plugin_settings.custom_fields_values.show_queue | default: "Yes" %}
-{% assign show_calendar = trmnl.plugin_settings.custom_fields_values.show_calendar | default: "Yes" %}
-{% assign show_recently_added = trmnl.plugin_settings.custom_fields_values.show_recently_added | default: "Yes" %}
-{% assign show_stats = trmnl.plugin_settings.custom_fields_values.show_stats | default: "Yes" %}
-{% assign show_quality = trmnl.plugin_settings.custom_fields_values.show_quality | default: "Yes" %}
-{% assign show_eta = trmnl.plugin_settings.custom_fields_values.show_eta | default: "Yes" %}
-{% assign show_network = trmnl.plugin_settings.custom_fields_values.show_network | default: "Yes" %}
-{% assign date_format = trmnl.plugin_settings.custom_fields_values.date_format | default: "Relative" %}
+{% assign show_queue = trmnl.plugin_settings.custom_fields_values.show_queue | default: "yes" %}
+{% assign show_calendar = trmnl.plugin_settings.custom_fields_values.show_calendar | default: "yes" %}
+{% assign show_recently_added = trmnl.plugin_settings.custom_fields_values.show_recently_added | default: "yes" %}
+{% assign show_stats = trmnl.plugin_settings.custom_fields_values.show_stats | default: "yes" %}
+{% assign show_quality = trmnl.plugin_settings.custom_fields_values.show_quality | default: "yes" %}
+{% assign show_eta = trmnl.plugin_settings.custom_fields_values.show_eta | default: "yes" %}
+{% assign show_network = trmnl.plugin_settings.custom_fields_values.show_network | default: "yes" %}
+{% assign date_format = trmnl.plugin_settings.custom_fields_values.date_format | default: "relative" %}
 
 {%- capture icon_tv -%}<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>{%- endcapture -%}
 {%- capture icon_film -%}<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>{%- endcapture -%}
@@ -181,7 +181,7 @@
 <div class="servarr-half-h">
 
   <!-- Queue Column (Left) -->
-  {% if show_queue == "Yes" %}
+  {% if show_queue == "yes" %}
   <div class="servarr-col servarr-col--queue">
     <div class="servarr-card">
       <div class="servarr-header">
@@ -194,8 +194,8 @@
             <div class="servarr-item">
               <div class="servarr-item-title">{{ item.title | truncate: 28 }}</div>
               <div class="servarr-item-meta">
-                {% if show_quality == "Yes" %}<span>{{ item.quality }}</span>{% endif %}
-                {% if show_eta == "Yes" %}<span>{{ item.eta }}</span>{% endif %}
+                {% if show_quality == "yes" %}<span>{{ item.quality }}</span>{% endif %}
+                {% if show_eta == "yes" %}<span>{{ item.eta }}</span>{% endif %}
               </div>
               <div class="servarr-progress">
                 <div class="servarr-progress-bar" style="width: {{ item.progress | default: 0 }}%;"></div>
@@ -219,7 +219,7 @@
     <div class="servarr-card servarr-card--row">
 
       <!-- Stats Section (4-column horizontal) -->
-      {% if show_stats == "Yes" %}
+      {% if show_stats == "yes" %}
       <div class="servarr-stats-row">
         {% case app_type %}
           {% when "sonarr" %}
@@ -338,9 +338,9 @@
       {% endif %}
 
       <!-- Recently Added or Upcoming Section -->
-      {% if show_recently_added == "Yes" or show_calendar == "Yes" %}
+      {% if show_recently_added == "yes" or show_calendar == "yes" %}
       <div class="servarr-list-section">
-        {% if show_recently_added == "Yes" %}
+        {% if show_recently_added == "yes" %}
           <div class="servarr-list-header">Recently Added</div>
           {% if recently_added.items and recently_added.items.size > 0 %}
             {% for item in recently_added.items limit: 3 %}
@@ -354,7 +354,7 @@
           {% else %}
             <div class="servarr-empty">Nothing recent</div>
           {% endif %}
-        {% elsif show_calendar == "Yes" %}
+        {% elsif show_calendar == "yes" %}
           <div class="servarr-list-header">Upcoming</div>
           {% if calendar.items and calendar.items.size > 0 %}
             {% for item in calendar.items limit: 3 %}
@@ -363,16 +363,16 @@
                 <div class="servarr-item-meta">
                   <span>
                     {% case date_format %}
-                      {% when "Relative" %}
+                      {% when "relative" %}
                         {% if item.days_until == 0 %}Today{% elsif item.days_until == 1 %}Tomorrow{% else %}{{ item.air_date | date: "%b %d" }}{% endif %}
-                      {% when "Short" %}
+                      {% when "short" %}
                         {{ item.air_date | date: "%b %d" }}
                       {% else %}
                         {% if item.days_until == 0 %}Today{% elsif item.days_until == 1 %}Tomorrow{% else %}{{ item.air_date | date: "%b %d" }}{% endif %}
                     {% endcase %}
                     {% if item.air_date_time %} {{ item.air_date_time | date: "%s" | plus: trmnl.user.utc_offset | date: "%H:%M" }}{% endif %}
                   </span>
-                  {% if show_network == "Yes" and item.network %}
+                  {% if show_network == "yes" and item.network %}
                     <span>{{ item.network }}</span>
                   {% endif %}
                 </div>

@@ -3,19 +3,19 @@
 # Copy variables section to .trmnlp.yml for testing
 
 custom_fields:
-  display_mode: "Dashboard"
-  show_queue: "Yes"
-  show_calendar: "Yes"
-  show_recently_added: "Yes"
-  show_stats: "Yes"
+  display_mode: "dashboard"
+  show_queue: "yes"
+  show_calendar: "yes"
+  show_recently_added: "yes"
+  show_stats: "yes"
   max_queue_items: 5
-  show_health: "Yes"
-  show_library_size: "Yes"
-  show_wanted: "Yes"
-  show_network: "Yes"
-  show_quality: "Yes"
-  show_eta: "Yes"
-  date_format: "Relative"
+  show_health: "yes"
+  show_library_size: "yes"
+  show_wanted: "yes"
+  show_network: "yes"
+  show_quality: "yes"
+  show_eta: "yes"
+  date_format: "relative"
   calendar_days: 7
 
 variables:
@@ -100,14 +100,3 @@ variables:
     monitored_missing: 45
     library_size_bytes: 2750000000000
     library_size_formatted: "2.5 TB"
-
-  disk:
-    total_space: 4000000000000
-    free_space: 1200000000000
-    total_space_formatted: "3.6 TB"
-    free_space_formatted: "1.1 TB"
-    percent_used: 70
-
-  activity:
-    last_grabbed: "Breaking Bad [S01E01]"
-    last_grabbed_time: "2 hours ago"

@@ -326,9 +326,27 @@ days_until() {
 # Fetch and transform queue data
 fetch_queue() {
     local api_version="$1"
+    local app_type="$2"
     local queue_data
 
-    queue_data=$(api_request "/api/${api_version}/queue?pageSize=20&includeUnknownSeriesItems=false")
+    # Build include params based on app type (like fetch_recently_added)
+    local include_params=""
+    case "$app_type" in
+        sonarr)
+            include_params="&includeSeries=true&includeEpisode=true"
+            ;;
+        radarr)
+            include_params="&includeMovie=true"
+            ;;
+        lidarr)
+            include_params="&includeArtist=true&includeAlbum=true"
+            ;;
+        readarr)
+            include_params="&includeAuthor=true&includeBook=true"
+            ;;
+    esac
+
+    queue_data=$(api_request "/api/${api_version}/queue?pageSize=20&includeUnknownSeriesItems=false${include_params}")
 
     if [[ -z "$queue_data" || "$queue_data" == "{}" ]]; then
         echo '{"count": 0, "items": []}'
@@ -338,16 +356,80 @@ fetch_queue() {
     local count
     count=$(echo "$queue_data" | jq '.totalRecords // .records | length // 0')
 
+    # Format titles per app type using the included series/movie/artist/author data
     local items
-    items=$(echo "$queue_data" | jq '[.records[:10] | .[] | {
-        title: (.title // .series.title // .movie.title // .artist.artistName // .author.authorName // "Unknown"),
-        quality: (.quality.quality.name // "Unknown"),
-        status: (.status // "unknown"),
-        progress: (if .size > 0 then (((.size - .sizeleft) / .size * 100) | floor) else 0 end),
-        eta: (.timeleft // "pending"),
-        size_total: .size,
-        size_remaining: .sizeleft
-    }]')
+    case "$app_type" in
+        sonarr)
+            items=$(echo "$queue_data" | jq '[.records[:10] | .[] | {
+                title: (
+                    if .series.title then
+                        "\(.series.title) [S\(.episode.seasonNumber // 0 | tostring | if length == 1 then "0" + . else . end)E\(.episode.episodeNumber // 0 | tostring | if length == 1 then "0" + . else . end)]"
+                    else
+                        .title // "Unknown"
+                    end
+                ),
+                quality: (.quality.quality.name // "Unknown"),
+                status: (.status // "unknown"),
+                progress: (if .size > 0 then (((.size - .sizeleft) / .size * 100) | floor) else 0 end),
+                eta: (.timeleft // "pending")
+            }]')
+            ;;
+        radarr)
+            items=$(echo "$queue_data" | jq '[.records[:10] | .[] | {
+                title: (
+                    if .movie.title then
+                        "\(.movie.title) (\(.movie.year // ""))"
+                    else
+                        .title // "Unknown"
+                    end
+                ),
+                quality: (.quality.quality.name // "Unknown"),
+                status: (.status // "unknown"),
+                progress: (if .size > 0 then (((.size - .sizeleft) / .size * 100) | floor) else 0 end),
+                eta: (.timeleft // "pending")
+            }]')
+            ;;
+        lidarr)
+            items=$(echo "$queue_data" | jq '[.records[:10] | .[] | {
+                title: (
+                    if .artist.artistName then
+                        "\(.artist.artistName) - \(.album.title // "Unknown Album")"
+                    else
+                        .title // "Unknown"
+                    end
+                ),
+                quality: (.quality.quality.name // "Unknown"),
+                status: (.status // "unknown"),
+                progress: (if .size > 0 then (((.size - .sizeleft) / .size * 100) | floor) else 0 end),
+                eta: (.timeleft // "pending")
+            }]')
+            ;;
+        readarr)
+            items=$(echo "$queue_data" | jq '[.records[:10] | .[] | {
+                title: (
+                    if .author.authorName then
+                        "\(.author.authorName) - \(.book.title // "Unknown Book")"
+                    else
+                        .title // "Unknown"
+                    end
+                ),
+                quality: (.quality.quality.name // "Unknown"),
+                status: (.status // "unknown"),
+                progress: (if .size > 0 then (((.size - .sizeleft) / .size * 100) | floor) else 0 end),
+                eta: (.timeleft // "pending")
+            }]')
+            ;;
+        *)
+            # Default fallback for prowlarr or unknown types
+            items=$(echo "$queue_data" | jq '[.records[:10] | .[] | {
+                title: (.title // "Unknown"),
+                quality: (.quality.quality.name // "Unknown"),
+                status: (.status // "unknown"),
+                progress: (if .size > 0 then (((.size - .sizeleft) / .size * 100) | floor) else 0 end),
+                eta: (.timeleft // "pending")
+            }]')
+            ;;
+    esac
 
     jq -n --argjson count "$count" --argjson items "$items" \
         '{count: $count, items: $items}'
@@ -379,7 +461,6 @@ fetch_calendar() {
         sonarr)
             items=$(echo "$calendar_data" | jq --arg today "$(get_date +%Y-%m-%d)" '[.[:10] | .[] | {
                 title: "\(.series.title // "Unknown") [S\(.seasonNumber | tostring | if length == 1 then "0" + . else . end)E\(.episodeNumber | tostring | if length == 1 then "0" + . else . end)]",
-                episode_title: .title,
                 air_date: (.airDateUtc // .airDate | split("T")[0]),
                 air_date_time: (.airDateUtc // .airDate // null),
                 network: (.series.network // null),
@@ -391,8 +472,6 @@ fetch_calendar() {
                 title: "\(.title) (\(.year))",
                 air_date: ((.digitalRelease // .physicalRelease // .inCinemas) | split("T")[0]),
                 air_date_time: (.digitalRelease // .physicalRelease // .inCinemas // null),
-                release_type: (if .digitalRelease then "digital" elif .physicalRelease then "physical" else "theatrical" end),
-                studio: .studio,
                 days_until: 0
             }]')
             ;;
@@ -449,8 +528,8 @@ fetch_health() {
         fi
     fi
 
-    jq -n --arg status "$status" --argjson issues "$health_data" \
-        '{status: $status, issues: $issues}'
+    jq -n --arg status "$status" \
+        '{status: $status}'
 }
 
 # Fetch Sonarr statistics
@@ -709,50 +788,6 @@ fetch_stats() {
     esac
 }
 
-# Fetch disk space information from root folders
-fetch_disk() {
-    local api_version="$1"
-    local disk_data
-
-    disk_data=$(api_request "/api/${api_version}/rootfolder")
-
-    if [[ -z "$disk_data" || "$disk_data" == "[]" || "$disk_data" == "{}" ]]; then
-        echo '{"total_space": 0, "free_space": 0, "total_space_formatted": "--", "free_space_formatted": "--", "percent_used": 0}'
-        return
-    fi
-
-    # Sum up all root folders
-    local total_space
-    local free_space
-    total_space=$(echo "$disk_data" | jq '[.[].totalSpace // 0] | add // 0')
-    free_space=$(echo "$disk_data" | jq '[.[].freeSpace // 0] | add // 0')
-
-    local used_space=$((total_space - free_space))
-    local percent_used=0
-    if [[ "$total_space" -gt 0 ]]; then
-        percent_used=$(echo "scale=0; $used_space * 100 / $total_space" | bc)
-    fi
-
-    local total_formatted
-    local free_formatted
-    total_formatted=$(format_bytes "$total_space")
-    free_formatted=$(format_bytes "$free_space")
-
-    jq -n \
-        --argjson total_space "$total_space" \
-        --argjson free_space "$free_space" \
-        --arg total_space_formatted "$total_formatted" \
-        --arg free_space_formatted "$free_formatted" \
-        --argjson percent_used "$percent_used" \
-        '{
-            total_space: $total_space,
-            free_space: $free_space,
-            total_space_formatted: $total_space_formatted,
-            free_space_formatted: $free_space_formatted,
-            percent_used: $percent_used
-        }'
-}
-
 # Helper function to calculate relative time (uses configured timezone)
 calc_relative_time() {
     local event_date="$1"
@@ -797,9 +832,25 @@ fetch_recently_added() {
     local app_type="$2"
     local history_data
 
+    # Build include params based on app type
+    local include_params=""
+    case "$app_type" in
+        sonarr)
+            include_params="&includeSeries=true&includeEpisode=true"
+            ;;
+        radarr)
+            include_params="&includeMovie=true"
+            ;;
+        lidarr)
+            include_params="&includeArtist=true&includeAlbum=true"
+            ;;
+        readarr)
+            include_params="&includeAuthor=true&includeBook=true"
+            ;;
+    esac
+
     # Fetch recent history and filter client-side for downloadFolderImported events
-    # (Sonarr API doesn't support eventType filtering in query params)
-    history_data=$(api_request "/api/${api_version}/history?pageSize=50&sortKey=date&sortDirection=descending")
+    history_data=$(api_request "/api/${api_version}/history?pageSize=50&sortKey=date&sortDirection=descending${include_params}")
 
     if [[ -z "$history_data" || "$history_data" == "{}" ]]; then
         echo '{"count": 0, "items": []}'
@@ -823,25 +874,49 @@ fetch_recently_added() {
     case "$app_type" in
         sonarr)
             items=$(echo "$records" | jq '[.[:6] | .[] | {
-                title: (.sourceTitle // .series.title // "Unknown"),
+                title: (
+                    if .series.title then
+                        "\(.series.title) [S\(.episode.seasonNumber | tostring | if length == 1 then "0" + . else . end)E\(.episode.episodeNumber | tostring | if length == 1 then "0" + . else . end)]"
+                    else
+                        .sourceTitle // "Unknown"
+                    end
+                ),
                 date: .date
             }]')
             ;;
         radarr)
             items=$(echo "$records" | jq '[.[:6] | .[] | {
-                title: (.sourceTitle // .movie.title // "Unknown"),
+                title: (
+                    if .movie.title then
+                        "\(.movie.title) (\(.movie.year // ""))"
+                    else
+                        .sourceTitle // "Unknown"
+                    end
+                ),
                 date: .date
             }]')
             ;;
         lidarr)
             items=$(echo "$records" | jq '[.[:6] | .[] | {
-                title: (.sourceTitle // .artist.artistName // "Unknown"),
+                title: (
+                    if .artist.artistName then
+                        "\(.artist.artistName) - \(.album.title // "Unknown Album")"
+                    else
+                        .sourceTitle // "Unknown"
+                    end
+                ),
                 date: .date
             }]')
             ;;
         readarr)
             items=$(echo "$records" | jq '[.[:6] | .[] | {
-                title: (.sourceTitle // .author.authorName // "Unknown"),
+                title: (
+                    if .author.authorName then
+                        "\(.author.authorName) - \(.book.title // "Unknown Book")"
+                    else
+                        .sourceTitle // "Unknown"
+                    end
+                ),
                 date: .date
             }]')
             ;;
@@ -867,70 +942,6 @@ fetch_recently_added() {
         '{count: $count, items: $items}'
 }
 
-# Fetch recent activity/history
-fetch_activity() {
-    local api_version="$1"
-    local app_type="$2"
-    local history_data
-
-    history_data=$(api_request "/api/${api_version}/history?pageSize=5&sortKey=date&sortDirection=descending")
-
-    if [[ -z "$history_data" || "$history_data" == "{}" ]]; then
-        echo '{"last_grabbed": null, "last_grabbed_time": null, "recent_items": []}'
-        return
-    fi
-
-    local records
-    records=$(echo "$history_data" | jq '.records // []')
-
-    if [[ "$records" == "[]" ]]; then
-        echo '{"last_grabbed": null, "last_grabbed_time": null, "recent_items": []}'
-        return
-    fi
-
-    # Get the most recent grab event
-    local last_grab
-    last_grab=$(echo "$records" | jq '[.[] | select(.eventType == "grabbed" or .eventType == "downloadFolderImported")] | first // null')
-
-    local last_grabbed=""
-    local last_grabbed_time=""
-
-    if [[ "$last_grab" != "null" && -n "$last_grab" ]]; then
-        case "$app_type" in
-            sonarr)
-                last_grabbed=$(echo "$last_grab" | jq -r '.sourceTitle // .series.title // "Unknown"')
-                ;;
-            radarr)
-                last_grabbed=$(echo "$last_grab" | jq -r '.sourceTitle // .movie.title // "Unknown"')
-                ;;
-            lidarr)
-                last_grabbed=$(echo "$last_grab" | jq -r '.sourceTitle // .artist.artistName // "Unknown"')
-                ;;
-            readarr)
-                last_grabbed=$(echo "$last_grab" | jq -r '.sourceTitle // .author.authorName // "Unknown"')
-                ;;
-            *)
-                last_grabbed=$(echo "$last_grab" | jq -r '.sourceTitle // "Unknown"')
-                ;;
-        esac
-
-        # Calculate relative time
-        local event_date
-        event_date=$(echo "$last_grab" | jq -r '.date // empty')
-        if [[ -n "$event_date" ]]; then
-            last_grabbed_time=$(calc_relative_time "$event_date")
-        fi
-    fi
-
-    jq -n \
-        --arg last_grabbed "$last_grabbed" \
-        --arg last_grabbed_time "$last_grabbed_time" \
-        '{
-            last_grabbed: (if $last_grabbed == "" then null else $last_grabbed end),
-            last_grabbed_time: (if $last_grabbed_time == "" then null else $last_grabbed_time end)
-        }'
-}
-
 # Build and send webhook payload
 send_webhook() {
     local app_type="$1"
@@ -943,23 +954,17 @@ send_webhook() {
     local calendar
     local health
     local stats
-    local disk
-    local activity
     local recently_added
 
-    queue=$(fetch_queue "$api_version")
+    queue=$(fetch_queue "$api_version" "$app_type")
     calendar=$(fetch_calendar "$api_version" "$app_type")
     health=$(fetch_health "$api_version")
     stats=$(fetch_stats "$app_type")
 
-    # Prowlarr doesn't have root folders or history, so skip for it
+    # Prowlarr doesn't have history, so skip recently_added for it
     if [[ "$app_type" != "prowlarr" ]]; then
-        disk=$(fetch_disk "$api_version")
-        activity=$(fetch_activity "$api_version" "$app_type")
         recently_added=$(fetch_recently_added "$api_version" "$app_type")
     else
-        disk='{"total_space": 0, "free_space": 0, "total_space_formatted": "--", "free_space_formatted": "--", "percent_used": 0}'
-        activity='{"last_grabbed": null, "last_grabbed_time": null}'
         recently_added='{"count": 0, "items": []}'
     fi
 
@@ -985,8 +990,6 @@ send_webhook() {
         --argjson queue "$queue" \
         --argjson calendar "$calendar" \
         --argjson stats "$stats" \
-        --argjson disk "$disk" \
-        --argjson activity "$activity" \
         --argjson recently_added "$recently_added" \
         '{
             merge_variables: {
@@ -1001,11 +1004,17 @@ send_webhook() {
                 queue: $queue,
                 calendar: $calendar,
                 stats: $stats,
-                disk: $disk,
-                activity: $activity,
                 recently_added: $recently_added
             }
         }')
+
+    # Calculate payload size
+    local payload_size
+    payload_size=$(echo -n "$payload" | wc -c | tr -d ' ')
+
+    if [[ "$VERBOSE" == true ]]; then
+        log_info "Payload size: ${payload_size} bytes"
+    fi
 
     # If no webhook URL, output to terminal
     if [[ -z "$WEBHOOK_URL" ]]; then

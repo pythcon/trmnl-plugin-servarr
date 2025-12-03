@@ -118,14 +118,3 @@ variables:
     monitored_missing: 45
     library_size_bytes: 2750000000000
     library_size_formatted: "2.5 TB"
-
-  disk:
-    total_space: 4000000000000
-    free_space: 1200000000000
-    total_space_formatted: "3.6 TB"
-    free_space_formatted: "1.1 TB"
-    percent_used: 70
-
-  activity:
-    last_grabbed: "The Last of Us [S02E01]"
-    last_grabbed_time: "1 hour ago"
