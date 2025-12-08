@@ -124,5 +124,11 @@ custom_fields:
   min: 1
   max: 30
   default: 7
+- keyname: author_info
+  name: About This Plugin
+  field_type: author_bio
+  description: Display Grafana panels on your TRMNL e-ink display
+  github_url: https://github.com/pythcon/trmnl-plugin-servarr
+  learn_more_url: https://trmnlplugins.com
 name: Servarr Dashboard
 refresh_interval: 15
