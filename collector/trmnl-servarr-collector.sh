@@ -11,7 +11,9 @@
 #   -k, --api-key   Servarr API key
 #   -w, --webhook   TRMNL webhook URL
 #   -t, --type      App type (sonarr|radarr|lidarr|readarr|prowlarr) - auto-detected if not provided
-#   -d, --days      Calendar days to fetch (default: 7)
+#   -d, --days      Calendar days forward to fetch (default: 7)
+#   -b, --days-before  Calendar days in the past to fetch (default: 0)
+#   -c, --calendar-only  Only send calendar data (smaller payload)
 #   -z, --timezone  Timezone for date calculations (default: system timezone)
 #   -i, --interval  Run continuously with this interval in seconds (e.g., 900 for 15 min)
 #   -h, --help      Show this help message
@@ -33,6 +35,8 @@ WEBHOOK_URL=""
 TIMEZONE=""  # Empty = use system timezone
 INTERVAL=0  # 0 means run once, >0 means loop with sleep
 VERBOSE=false  # Show detailed error responses
+CALENDAR_ONLY=false  # Only send calendar data (smaller payload)
+CALENDAR_DAYS_BEFORE=0  # Days in the past for calendar
 
 # Colors for output (disabled if not a terminal)
 if [[ -t 1 ]]; then
@@ -121,7 +125,11 @@ Optional Arguments:
                   If not provided, JSON is printed to terminal
   -t, --type      App type: sonarr, radarr, lidarr, readarr, prowlarr
                   (auto-detected if not provided)
-  -d, --days      Number of days for calendar lookup (default: 7)
+  -d, --days      Number of days forward for calendar lookup (default: 7)
+  -b, --days-before
+                  Number of days in the past for calendar (default: 0)
+  -c, --calendar-only
+                  Only send calendar data (smaller payload for webhook limits)
   -z, --timezone  Timezone for date calculations (e.g., America/New_York)
                   Defaults to system timezone if not specified
   -i, --interval  Run continuously with this sleep interval in seconds
@@ -177,6 +185,14 @@ parse_args() {
             -d|--days)
                 CALENDAR_DAYS="$2"
                 shift 2
+                ;;
+            -b|--days-before)
+                CALENDAR_DAYS_BEFORE="$2"
+                shift 2
+                ;;
+            -c|--calendar-only)
+                CALENDAR_ONLY=true
+                shift
                 ;;
             -z|--timezone)
                 TIMEZONE="$2"
@@ -442,7 +458,7 @@ fetch_calendar() {
 
     local start_date
     local end_date
-    start_date=$(get_date +%Y-%m-%d)
+    start_date=$(get_date -v-${CALENDAR_DAYS_BEFORE}d +%Y-%m-%d 2>/dev/null || get_date -d "-${CALENDAR_DAYS_BEFORE} days" +%Y-%m-%d 2>/dev/null)
     end_date=$(get_date -v+${CALENDAR_DAYS}d +%Y-%m-%d 2>/dev/null || get_date -d "+${CALENDAR_DAYS} days" +%Y-%m-%d 2>/dev/null)
 
     local calendar_data
@@ -1048,6 +1064,77 @@ send_webhook() {
     rm -f "$response_file"
 }
 
+# Build and send calendar-only webhook payload (smaller payload for webhook limits)
+send_calendar_only_webhook() {
+    local app_type="$1"
+    local api_version="$2"
+
+    log_info "Fetching calendar data from ${app_type} (calendar-only mode)..."
+
+    # Fetch only calendar data
+    local calendar
+    calendar=$(fetch_calendar "$api_version" "$app_type")
+
+    # Get app name with proper capitalization
+    local app_name
+    app_name=$(echo "$app_type" | sed 's/./\U&/')
+
+    # Build the minimal payload
+    local payload
+    payload=$(jq -n \
+        --arg app_name "$app_name" \
+        --arg app_type "$app_type" \
+        --arg last_updated "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+        --argjson calendar "$calendar" \
+        '{
+            merge_variables: {
+                app_name: $app_name,
+                app_type: $app_type,
+                last_updated: $last_updated,
+                calendar: $calendar
+            }
+        }')
+
+    # Calculate payload size
+    local payload_size
+    payload_size=$(echo -n "$payload" | wc -c | tr -d ' ')
+
+    if [[ "$VERBOSE" == true ]]; then
+        log_info "Payload size: ${payload_size} bytes (calendar-only)"
+    fi
+
+    # If no webhook URL, output to terminal
+    if [[ -z "$WEBHOOK_URL" ]]; then
+        echo "$payload" | jq .
+        return 0
+    fi
+
+    log_info "Sending calendar data to TRMNL webhook..."
+
+    # Send to webhook
+    local response_file
+    local http_code
+
+    response_file=$(mktemp)
+    http_code=$(curl -s -o "$response_file" -w "%{http_code}" -X POST "$WEBHOOK_URL" \
+        -H "Content-Type: application/json" \
+        -d "$payload")
+
+    if [[ "$http_code" -ge 200 && "$http_code" -lt 300 ]]; then
+        log_info "Successfully sent calendar data to TRMNL (HTTP $http_code)"
+    else
+        log_error "Failed to send calendar data to TRMNL (HTTP $http_code)"
+        if [[ "$VERBOSE" == true ]]; then
+            log_error "Response body:"
+            cat "$response_file" >&2
+            echo "" >&2
+        fi
+        rm -f "$response_file"
+        exit 1
+    fi
+    rm -f "$response_file"
+}
+
 # Run a single collection cycle
 run_collection() {
     local app_type="$1"
@@ -1055,8 +1142,13 @@ run_collection() {
 
     log_info "Starting collection cycle at $(date)"
 
-    # Fetch and send data
-    if send_webhook "$app_type" "$api_version"; then
+    # Fetch and send data (use calendar-only mode if enabled)
+    local send_func="send_webhook"
+    if [[ "$CALENDAR_ONLY" == true ]]; then
+        send_func="send_calendar_only_webhook"
+    fi
+
+    if $send_func "$app_type" "$api_version"; then
         log_info "Collection cycle completed successfully"
         return 0
     else

@@ -13,6 +13,9 @@
 {% assign show_eta = trmnl.plugin_settings.custom_fields_values.show_eta | default: "yes" %}
 {% assign show_network = trmnl.plugin_settings.custom_fields_values.show_network | default: "yes" %}
 {% assign date_format = trmnl.plugin_settings.custom_fields_values.date_format | default: "relative" %}
+{% assign max_queue_items = trmnl.plugin_settings.custom_fields_values.max_queue_items | default: 3 %}
+{% assign max_calendar_items = trmnl.plugin_settings.custom_fields_values.max_calendar_items | default: 3 %}
+{% assign max_recently_added_items = trmnl.plugin_settings.custom_fields_values.max_recently_added_items | default: 3 %}
 
 {%- capture icon_tv -%}<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>{%- endcapture -%}
 {%- capture icon_film -%}<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>{%- endcapture -%}
@@ -208,7 +211,7 @@
       </div>
       <div class="servarr-content">
         {% if queue.items and queue.items.size > 0 %}
-          {% for item in queue.items limit: 3 %}
+          {% for item in queue.items limit: max_queue_items %}
             <div class="servarr-item">
               <div class="servarr-item-title">{{ item.title | truncate: 28 }}</div>
               <div class="servarr-item-meta">
@@ -220,7 +223,7 @@
               </div>
             </div>
           {% endfor %}
-          {% assign remaining = queue.count | minus: 3 %}
+          {% assign remaining = queue.count | minus: max_queue_items %}
           {% if remaining > 0 %}
             <div class="servarr-empty">+{{ remaining }} more</div>
           {% endif %}
@@ -361,7 +364,7 @@
         {% if show_recently_added == "yes" %}
           <div class="servarr-list-header">Recently Added</div>
           {% if recently_added.items and recently_added.items.size > 0 %}
-            {% for item in recently_added.items limit: 3 %}
+            {% for item in recently_added.items limit: max_recently_added_items %}
               <div class="servarr-item">
                 <div class="servarr-item-title">{{ item.title | truncate: 35 }}</div>
                 <div class="servarr-item-meta">
@@ -375,7 +378,7 @@
         {% elsif show_calendar == "yes" %}
           <div class="servarr-list-header">Upcoming</div>
           {% if calendar.items and calendar.items.size > 0 %}
-            {% for item in calendar.items limit: 3 %}
+            {% for item in calendar.items limit: max_calendar_items %}
               <div class="servarr-item">
                 <div class="servarr-item-title">{{ item.title | truncate: 35 }}</div>
                 <div class="servarr-item-meta">

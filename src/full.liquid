@@ -10,6 +10,9 @@
 {% assign show_recently_added = trmnl.plugin_settings.custom_fields_values.show_recently_added | default: "yes" | downcase %}
 {% assign show_stats = trmnl.plugin_settings.custom_fields_values.show_stats | default: "yes" | downcase %}
 {% assign max_queue = trmnl.plugin_settings.custom_fields_values.max_queue_items | default: 3 %}
+{% assign max_calendar_items = trmnl.plugin_settings.custom_fields_values.max_calendar_items | default: 3 %}
+{% assign max_recently_added_items = trmnl.plugin_settings.custom_fields_values.max_recently_added_items | default: 3 %}
+{% assign max_monthly_events_per_day = trmnl.plugin_settings.custom_fields_values.max_monthly_events_per_day | default: 2 %}
 {% assign show_health = trmnl.plugin_settings.custom_fields_values.show_health | default: "yes" | downcase %}
 {% assign show_network = trmnl.plugin_settings.custom_fields_values.show_network | default: "yes" | downcase %}
 {% assign show_quality = trmnl.plugin_settings.custom_fields_values.show_quality | default: "yes" | downcase %}
@@ -21,25 +24,6 @@
 {% if show_queue == "yes" %}{% assign col_count = col_count | plus: 1 %}{% endif %}
 {% if show_recently_added == "yes" or show_calendar == "yes" %}{% assign col_count = col_count | plus: 1 %}{% endif %}
 {% if show_stats == "yes" %}{% assign col_count = col_count | plus: 1 %}{% endif %}
-
-{% comment %} Calculate max items based on what's enabled {% endcomment %}
-{% if show_recently_added == "yes" and show_calendar == "yes" %}
-  {% assign max_middle_items = 3 %}
-{% else %}
-  {% assign max_middle_items = 6 %}
-{% endif %}
-{% comment %} Increase max items when fewer columns are shown {% endcomment %}
-{% if col_count == 1 %}
-  {% assign max_middle_items = 8 %}
-  {% assign max_queue = 8 %}
-{% elsif col_count == 2 %}
-  {% if show_recently_added == "yes" and show_calendar == "yes" %}
-    {% assign max_middle_items = 4 %}
-  {% else %}
-    {% assign max_middle_items = 7 %}
-  {% endif %}
-  {% assign max_queue = max_queue | plus: 2 %}
-{% endif %}
 
 {% comment %} SVG Icons {% endcomment %}
 {%- capture icon_tv -%}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>{%- endcapture -%}
@@ -583,7 +567,7 @@
             {% for item in calendar.items %}
               {% if item.days_until == col_days_until %}
                 {% assign day_count = day_count | plus: 1 %}
-                {% if shown_count < 3 %}
+                {% if shown_count < max_calendar_items %}
                   <div class="calendar-event">
                     <div class="calendar-event-title">{{ item.title }}</div>
                     {% if item.air_date_time %}<div class="calendar-event-time">{{ item.air_date_time | date: "%s" | plus: trmnl.user.utc_offset | date: "%H:%M" }}</div>{% endif %}
@@ -605,11 +589,17 @@
 
 {% when "calendar_-_monthly" %}
 <!-- ===== MONTHLY CALENDAR VIEW ===== -->
+{% comment %} Get current month/year from last_updated {% endcomment %}
+{% assign current_month_num = last_updated | date: "%m" | plus: 0 %}
+{% assign current_month_name = last_updated | date: "%B" %}
+{% assign current_year = last_updated | date: "%Y" %}
+{% assign current_day = last_updated | date: "%d" | plus: 0 %}
+
 <div class="calendar-container">
   <div class="calendar-card">
     <div class="calendar-header">
       <div>
-        <div class="calendar-title">January 2025</div>
+        <div class="calendar-title">{{ current_month_name }} {{ current_year }}</div>
         <div class="calendar-subtitle">{{ calendar.count }} releases this month</div>
       </div>
     </div>
@@ -630,7 +620,7 @@
           <div class="calendar-month-cell">
             <div class="calendar-month-day-num">{{ d }}</div>
             <div class="calendar-month-events">
-              {% for item in calendar.items %}{% assign item_day = item.air_date | date: "%d" | plus: 0 %}{% if item_day == d %}{% assign item_month = item.air_date | date: "%m" | plus: 0 %}{% if item_month == 1 %}<div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>{% endif %}{% endif %}{% endfor %}
+              {% for item in calendar.items %}{% assign item_day = item.air_date | date: "%d" | plus: 0 %}{% if item_day == d %}{% assign item_month = item.air_date | date: "%m" | plus: 0 %}{% if item_month == current_month_num %}<div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>{% endif %}{% endif %}{% endfor %}
             </div>
           </div>
         {% endfor %}
@@ -640,14 +630,14 @@
           <div class="calendar-month-cell">
             <div class="calendar-month-day-num">{{ d }}</div>
             <div class="calendar-month-events">
-              {% for item in calendar.items %}{% assign item_day = item.air_date | date: "%d" | plus: 0 %}{% if item_day == d %}{% assign item_month = item.air_date | date: "%m" | plus: 0 %}{% if item_month == 1 %}<div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>{% endif %}{% endif %}{% endfor %}
+              {% for item in calendar.items %}{% assign item_day = item.air_date | date: "%d" | plus: 0 %}{% if item_day == d %}{% assign item_month = item.air_date | date: "%m" | plus: 0 %}{% if item_month == current_month_num %}<div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>{% endif %}{% endif %}{% endfor %}
             </div>
           </div>
         {% endfor %}
 
         {% comment %} Week 3: Jan 12-18 {% endcomment %}
         {% for d in (12..18) %}
-          <div class="calendar-month-cell{% if d == 15 %} today{% endif %}">
+          <div class="calendar-month-cell{% if d == current_day %} today{% endif %}">
             <div class="calendar-month-day-num">{{ d }}</div>
             <div class="calendar-month-events">
               {% assign event_count = 0 %}
@@ -655,16 +645,16 @@
                 {% assign item_day = item.air_date | date: "%d" | plus: 0 %}
                 {% if item_day == d %}
                   {% assign item_month = item.air_date | date: "%m" | plus: 0 %}
-                  {% if item_month == 1 %}
-                    {% if event_count < 2 %}
+                  {% if item_month == current_month_num %}
+                    {% if event_count < max_monthly_events_per_day %}
                       <div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>
                     {% endif %}
                     {% assign event_count = event_count | plus: 1 %}
                   {% endif %}
                 {% endif %}
               {% endfor %}
-              {% if event_count > 2 %}
-                <div class="calendar-month-more">+{{ event_count | minus: 2 }} more</div>
+              {% if event_count > max_monthly_events_per_day %}
+                <div class="calendar-month-more">+{{ event_count | minus: max_monthly_events_per_day }} more</div>
               {% endif %}
             </div>
           </div>
@@ -680,16 +670,16 @@
                 {% assign item_day = item.air_date | date: "%d" | plus: 0 %}
                 {% if item_day == d %}
                   {% assign item_month = item.air_date | date: "%m" | plus: 0 %}
-                  {% if item_month == 1 %}
-                    {% if event_count < 2 %}
+                  {% if item_month == current_month_num %}
+                    {% if event_count < max_monthly_events_per_day %}
                       <div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>
                     {% endif %}
                     {% assign event_count = event_count | plus: 1 %}
                   {% endif %}
                 {% endif %}
               {% endfor %}
-              {% if event_count > 2 %}
-                <div class="calendar-month-more">+{{ event_count | minus: 2 }} more</div>
+              {% if event_count > max_monthly_events_per_day %}
+                <div class="calendar-month-more">+{{ event_count | minus: max_monthly_events_per_day }} more</div>
               {% endif %}
             </div>
           </div>
@@ -705,16 +695,16 @@
                 {% assign item_day = item.air_date | date: "%d" | plus: 0 %}
                 {% if item_day == d %}
                   {% assign item_month = item.air_date | date: "%m" | plus: 0 %}
-                  {% if item_month == 1 %}
-                    {% if event_count < 2 %}
+                  {% if item_month == current_month_num %}
+                    {% if event_count < max_monthly_events_per_day %}
                       <div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>
                     {% endif %}
                     {% assign event_count = event_count | plus: 1 %}
                   {% endif %}
                 {% endif %}
               {% endfor %}
-              {% if event_count > 2 %}
-                <div class="calendar-month-more">+{{ event_count | minus: 2 }} more</div>
+              {% if event_count > max_monthly_events_per_day %}
+                <div class="calendar-month-more">+{{ event_count | minus: max_monthly_events_per_day }} more</div>
               {% endif %}
             </div>
           </div>
@@ -775,7 +765,7 @@
       </div>
       <div class="servarr-content">
         {% if recently_added.items and recently_added.items.size > 0 %}
-          {% for item in recently_added.items limit: max_middle_items %}
+          {% for item in recently_added.items limit: max_recently_added_items %}
             <div class="servarr-item">
               <div class="servarr-item-title">{{ item.title | truncate: 35 }}</div>
               <div class="servarr-item-meta">
@@ -783,7 +773,7 @@
               </div>
             </div>
           {% endfor %}
-          {% assign remaining_added = recently_added.count | minus: max_middle_items %}
+          {% assign remaining_added = recently_added.count | minus: max_recently_added_items %}
           {% if remaining_added > 0 %}
             <div class="servarr-empty">+{{ remaining_added }} more</div>
           {% endif %}
@@ -802,7 +792,7 @@
       </div>
       <div class="servarr-content">
         {% if calendar.items and calendar.items.size > 0 %}
-          {% for item in calendar.items limit: max_middle_items %}
+          {% for item in calendar.items limit: max_calendar_items %}
             <div class="servarr-item">
               <div class="servarr-item-title">{{ item.title | truncate: 35 }}</div>
               <div class="servarr-item-meta">
@@ -825,7 +815,7 @@
               </div>
             </div>
           {% endfor %}
-          {% assign remaining_cal = calendar.count | minus: max_middle_items %}
+          {% assign remaining_cal = calendar.count | minus: max_calendar_items %}
           {% if remaining_cal > 0 %}
             <div class="servarr-empty">+{{ remaining_cal }} more</div>
           {% endif %}
