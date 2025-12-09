@@ -143,7 +143,7 @@ custom_fields:
 - keyname: author_info
   name: About This Plugin
   field_type: author_bio
-  description: Display Grafana panels on your TRMNL e-ink display
+  description: A beautiful dashboard for your Servarr media stack. Monitor download queues, upcoming releases, recently added content, and library statistics from Sonarr, Radarr, Lidarr, Readarr, or Prowlarr. Visit the GitHub repository for setup instructions on connecting your Servarr instance to TRMNL via webhook.
   github_url: https://github.com/pythcon/trmnl-plugin-servarr
   learn_more_url: https://trmnlplugins.com
 name: Servarr Dashboard
