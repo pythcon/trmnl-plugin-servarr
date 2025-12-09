@@ -59,6 +59,30 @@ custom_fields:
   min: 1
   max: 10
   default: 5
+- keyname: max_calendar_items
+  field_type: number
+  name: Max Calendar Items
+  description: Maximum number of calendar items to display (1-10)
+  placeholder: 3
+  min: 1
+  max: 10
+  default: 3
+- keyname: max_recently_added_items
+  field_type: number
+  name: Max Recently Added Items
+  description: Maximum number of recently added items to display (1-10)
+  placeholder: 3
+  min: 1
+  max: 10
+  default: 3
+- keyname: max_monthly_events_per_day
+  field_type: number
+  name: Max Monthly Events Per Day
+  description: Maximum events per day in monthly calendar view (1-5)
+  placeholder: 2
+  min: 1
+  max: 5
+  default: 2
 - keyname: show_health
   field_type: select
   name: Show Health Status
