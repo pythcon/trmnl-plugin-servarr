@@ -1,6 +1,5 @@
 # TRMNL Plugin Development
 .trmnlp/
-*.png
 *.html
 
 # Environment and secrets
