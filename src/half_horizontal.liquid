@@ -16,6 +16,7 @@
 {% assign max_queue_items = trmnl.plugin_settings.custom_fields_values.max_queue_items | default: 3 %}
 {% assign max_calendar_items = trmnl.plugin_settings.custom_fields_values.max_calendar_items | default: 3 %}
 {% assign max_recently_added_items = trmnl.plugin_settings.custom_fields_values.max_recently_added_items | default: 3 %}
+{% assign show_wanted = trmnl.plugin_settings.custom_fields_values.show_wanted | default: "yes" | downcase %}
 
 {%- capture icon_tv -%}<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>{%- endcapture -%}
 {%- capture icon_film -%}<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>{%- endcapture -%}
@@ -259,11 +260,13 @@
               <span class="servarr-stat-value">{{ stats.episodes_on_disk | default: "0" }}</span>
               <span class="servarr-stat-label">On Disk</span>
             </div>
+            {% if show_wanted == "yes" %}
             <div class="servarr-stat-box">
               <span class="servarr-stat-icon">{{ icon_search }}</span>
               <span class="servarr-stat-value">{{ stats.monitored_missing | default: "0" }}</span>
               <span class="servarr-stat-label">Wanted</span>
             </div>
+            {% endif %}
           {% when "radarr" %}
             <div class="servarr-stat-box">
               <span class="servarr-stat-icon">{{ icon_film }}</span>
@@ -301,11 +304,13 @@
               <span class="servarr-stat-value">{{ stats.tracks_on_disk | default: "0" }}</span>
               <span class="servarr-stat-label">Tracks</span>
             </div>
+            {% if show_wanted == "yes" %}
             <div class="servarr-stat-box">
               <span class="servarr-stat-icon">{{ icon_search }}</span>
               <span class="servarr-stat-value">{{ stats.monitored_missing | default: "0" }}</span>
               <span class="servarr-stat-label">Wanted</span>
             </div>
+            {% endif %}
           {% when "readarr" %}
             <div class="servarr-stat-box">
               <span class="servarr-stat-icon">{{ icon_user }}</span>
@@ -322,11 +327,13 @@
               <span class="servarr-stat-value">{{ stats.books_on_disk | default: "0" }}</span>
               <span class="servarr-stat-label">On Disk</span>
             </div>
+            {% if show_wanted == "yes" %}
             <div class="servarr-stat-box">
               <span class="servarr-stat-icon">{{ icon_search }}</span>
               <span class="servarr-stat-value">{{ stats.monitored_missing | default: "0" }}</span>
               <span class="servarr-stat-label">Wanted</span>
             </div>
+            {% endif %}
           {% when "prowlarr" %}
             <div class="servarr-stat-box">
               <span class="servarr-stat-icon">{{ icon_list }}</span>

@@ -18,6 +18,8 @@
 {% assign show_quality = trmnl.plugin_settings.custom_fields_values.show_quality | default: "yes" | downcase %}
 {% assign show_eta = trmnl.plugin_settings.custom_fields_values.show_eta | default: "yes" | downcase %}
 {% assign date_format = trmnl.plugin_settings.custom_fields_values.date_format | default: "relative" | downcase %}
+{% assign show_library_size = trmnl.plugin_settings.custom_fields_values.show_library_size | default: "yes" | downcase %}
+{% assign show_wanted = trmnl.plugin_settings.custom_fields_values.show_wanted | default: "yes" | downcase %}
 
 {% comment %} Count active columns for dynamic layout {% endcomment %}
 {% assign col_count = 0 %}
@@ -858,12 +860,14 @@
                 <span class="servarr-stat-value">{{ stats.episodes_on_disk | default: "0" }}</span>
                 <span class="servarr-stat-label">On Disk</span>
               </div>
+              {% if show_wanted == "yes" %}
               <div class="servarr-stat-box">
                 <span class="servarr-stat-icon">{{ icon_search }}</span>
                 <span class="servarr-stat-value">{{ stats.monitored_missing | default: "0" }}</span>
                 <span class="servarr-stat-label">Wanted</span>
               </div>
-              {% if stats.library_size_formatted %}
+              {% endif %}
+              {% if show_library_size == "yes" and stats.library_size_formatted %}
               <div class="servarr-stat-box servarr-stat-full">
                 <span class="servarr-stat-icon">{{ icon_database }}</span>
                 <span class="servarr-stat-value">{{ stats.library_size_formatted }}</span>
@@ -887,12 +891,14 @@
                 <span class="servarr-stat-value">{{ stats.movies_missing | default: "0" }}</span>
                 <span class="servarr-stat-label">Missing</span>
               </div>
+              {% if show_wanted == "yes" %}
               <div class="servarr-stat-box">
                 <span class="servarr-stat-icon">{{ icon_search }}</span>
                 <span class="servarr-stat-value">{{ stats.monitored_missing | default: "0" }}</span>
                 <span class="servarr-stat-label">Wanted</span>
               </div>
-              {% if stats.library_size_formatted %}
+              {% endif %}
+              {% if show_library_size == "yes" and stats.library_size_formatted %}
               <div class="servarr-stat-box servarr-stat-full">
                 <span class="servarr-stat-icon">{{ icon_database }}</span>
                 <span class="servarr-stat-value">{{ stats.library_size_formatted }}</span>
@@ -916,12 +922,14 @@
                 <span class="servarr-stat-value">{{ stats.total_tracks | default: "0" }}</span>
                 <span class="servarr-stat-label">Tracks</span>
               </div>
+              {% if show_wanted == "yes" %}
               <div class="servarr-stat-box">
                 <span class="servarr-stat-icon">{{ icon_search }}</span>
                 <span class="servarr-stat-value">{{ stats.monitored_missing | default: "0" }}</span>
                 <span class="servarr-stat-label">Wanted</span>
               </div>
-              {% if stats.library_size_formatted %}
+              {% endif %}
+              {% if show_library_size == "yes" and stats.library_size_formatted %}
               <div class="servarr-stat-box servarr-stat-full">
                 <span class="servarr-stat-icon">{{ icon_database }}</span>
                 <span class="servarr-stat-value">{{ stats.library_size_formatted }}</span>
@@ -945,12 +953,14 @@
                 <span class="servarr-stat-value">{{ stats.books_on_disk | default: "0" }}</span>
                 <span class="servarr-stat-label">On Disk</span>
               </div>
+              {% if show_wanted == "yes" %}
               <div class="servarr-stat-box">
                 <span class="servarr-stat-icon">{{ icon_search }}</span>
                 <span class="servarr-stat-value">{{ stats.monitored_missing | default: "0" }}</span>
                 <span class="servarr-stat-label">Wanted</span>
               </div>
-              {% if stats.library_size_formatted %}
+              {% endif %}
+              {% if show_library_size == "yes" and stats.library_size_formatted %}
               <div class="servarr-stat-box servarr-stat-full">
                 <span class="servarr-stat-icon">{{ icon_database }}</span>
                 <span class="servarr-stat-value">{{ stats.library_size_formatted }}</span>

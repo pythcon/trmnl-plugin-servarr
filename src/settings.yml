@@ -140,14 +140,6 @@ custom_fields:
   - Short
   - Full
   default: relative
-- keyname: calendar_days
-  field_type: number
-  name: Calendar Days Ahead
-  description: Number of days to look ahead for upcoming releases (1-30)
-  placeholder: 7
-  min: 1
-  max: 30
-  default: 7
 - keyname: author_info
   name: About This Plugin
   field_type: author_bio
