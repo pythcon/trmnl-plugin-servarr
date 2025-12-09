@@ -1,0 +1,68 @@
+# TRMNL Servarr Collector - Docker Compose Example
+#
+# This collector supports multiple Servarr instances from a single container.
+#
+# RECOMMENDED: Use config file mode (supports multiple instances)
+# ALTERNATIVE: Use environment variable mode (single instance only)
+#
+# Setup:
+#   1. Copy config.example.yaml to config.yaml
+#   2. Update config.yaml with your Servarr URLs, API keys, and webhook URLs
+#   3. Run: docker-compose up -d
+
+services:
+  # ============================================
+  # RECOMMENDED: Config File Mode
+  # ============================================
+  # Single container handles ALL your Servarr instances
+  # Just define them in config.yaml
+  trmnl-collector:
+    build:
+      context: ./collector
+      dockerfile: Dockerfile
+    # Or use pre-built image when available:
+    # image: ghcr.io/yourusername/trmnl-servarr-collector:latest
+    container_name: trmnl-collector
+    restart: unless-stopped
+    volumes:
+      # Mount your config file (required for multi-instance mode)
+      - ./config.yaml:/app/config.yaml:ro
+    environment:
+      # Timezone (can also be set in config.yaml)
+      - TZ=America/New_York
+    network_mode: host
+
+# ============================================
+# ALTERNATIVE: Environment Variable Mode
+# ============================================
+# Use this if you only have ONE Servarr instance
+# or prefer not to use a config file.
+# Uncomment and configure as needed.
+#
+#   trmnl-collector-single:
+#     build:
+#       context: ./collector
+#       dockerfile: Dockerfile
+#     container_name: trmnl-collector-single
+#     restart: unless-stopped
+#     environment:
+#       # Required
+#       - SERVARR_URL=http://sonarr:8989
+#       - API_KEY=your-api-key-here
+#       - WEBHOOK_URL=https://usetrmnl.com/api/custom_plugins/your-webhook-id
+#       # Optional: Explicitly set app type (auto-detected if not set)
+#       # - APP_TYPE=sonarr
+#       # Optional: Number of days to show in calendar (default: 7)
+#       - CALENDAR_DAYS=7
+#       # Optional: Days of historical calendar data (default: 0)
+#       # - CALENDAR_DAYS_BEFORE=0
+#       # Optional: Only send calendar data (smaller payload)
+#       # - CALENDAR_ONLY=true
+#       # Optional: Collection interval in seconds (900 = 15 minutes)
+#       # If 0 or unset, runs once and exits.
+#       - INTERVAL=900
+#       # Optional: Timezone
+#       - TZ=America/New_York
+#     networks:
+#       - servarr
+

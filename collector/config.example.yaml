@@ -1,0 +1,80 @@
+# TRMNL Servarr Collector Configuration
+#
+# Copy this file to config.yaml and update with your values.
+#
+# Usage:
+#   python trmnl_collector.py --config config.yaml
+
+# Global settings
+interval: 900              # Collection interval in seconds (900 = 15 minutes)
+                           # Set to 0 for single run mode
+timezone: America/New_York # Timezone for date calculations (optional)
+
+# Default settings for all instances (can be overridden per instance)
+defaults:
+  calendar_days: 7         # Days forward for calendar
+  calendar_days_before: 0  # Days back for calendar (historical)
+
+# Instance definitions
+# Each instance sends to its own TRMNL webhook
+instances:
+  # ============================================
+  # Sonarr (TV Shows)
+  # ============================================
+  - name: sonarr
+    url: http://sonarr:8989
+    api_key: your-sonarr-api-key
+    webhook: https://usetrmnl.com/api/custom_plugins/your-sonarr-webhook-id
+    # type: sonarr  # Optional - auto-detected from URL
+
+  # ============================================
+  # Sonarr 4K (Second instance example)
+  # ============================================
+  # - name: sonarr-4k
+  #   url: http://sonarr-4k:8989
+  #   api_key: your-sonarr-4k-api-key
+  #   webhook: https://usetrmnl.com/api/custom_plugins/your-sonarr-4k-webhook-id
+  #   calendar_days: 14  # Override default - show 2 weeks
+
+  # ============================================
+  # Radarr (Movies)
+  # ============================================
+  - name: radarr
+    url: http://radarr:7878
+    api_key: your-radarr-api-key
+    webhook: https://usetrmnl.com/api/custom_plugins/your-radarr-webhook-id
+
+  # ============================================
+  # Lidarr (Music)
+  # ============================================
+  # - name: lidarr
+  #   url: http://lidarr:8686
+  #   api_key: your-lidarr-api-key
+  #   webhook: https://usetrmnl.com/api/custom_plugins/your-lidarr-webhook-id
+
+  # ============================================
+  # Readarr (Books)
+  # ============================================
+  # - name: readarr
+  #   url: http://readarr:8787
+  #   api_key: your-readarr-api-key
+  #   webhook: https://usetrmnl.com/api/custom_plugins/your-readarr-webhook-id
+
+  # ============================================
+  # Prowlarr (Indexers)
+  # ============================================
+  # - name: prowlarr
+  #   url: http://prowlarr:9696
+  #   api_key: your-prowlarr-api-key
+  #   webhook: https://usetrmnl.com/api/custom_plugins/your-prowlarr-webhook-id
+
+  # ============================================
+  # Calendar-only mode example
+  # ============================================
+  # - name: sonarr-calendar
+  #   url: http://sonarr:8989
+  #   api_key: your-sonarr-api-key
+  #   webhook: https://usetrmnl.com/api/custom_plugins/your-calendar-webhook-id
+  #   calendar_only: true          # Only send calendar data (smaller payload)
+  #   calendar_days: 30            # Show 30 days forward
+  #   calendar_days_before: 7      # Include 7 days of past releases

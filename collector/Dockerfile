@@ -1,17 +1,15 @@
 # TRMNL Servarr Collector
-# Lightweight container for collecting Servarr data and sending to TRMNL webhook
+# Collects data from Servarr apps and sends to TRMNL webhook
 #
 # Build:
 #   docker build -t trmnl-servarr-collector ./collector
 #
-# Run (one-time):
-#   docker run --rm \
-#     -e SERVARR_URL=http://sonarr:8989 \
-#     -e API_KEY=your-api-key \
-#     -e WEBHOOK_URL=https://usetrmnl.com/api/custom_plugins/xxx \
+# Run with config file (recommended for multiple instances):
+#   docker run -d \
+#     -v ./config.yaml:/app/config.yaml:ro \
 #     trmnl-servarr-collector
 #
-# Run (continuous with 15-minute interval):
+# Run with environment variables (single instance):
 #   docker run -d \
 #     -e SERVARR_URL=http://sonarr:8989 \
 #     -e API_KEY=your-api-key \
@@ -19,61 +17,69 @@
 #     -e INTERVAL=900 \
 #     trmnl-servarr-collector
 
-FROM alpine:3.19
+FROM python:3.12-slim
 
 # Install dependencies
-RUN apk add --no-cache \
-    bash \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    jq \
-    bc \
-    tzdata
+    && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
 WORKDIR /app
 
+# Copy requirements and install Python dependencies
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
+
 # Copy collector script
+COPY trmnl_collector.py /app/
+RUN chmod +x /app/trmnl_collector.py
+
+# Copy bash script for backwards compatibility
 COPY trmnl-servarr-collector.sh /app/
 RUN chmod +x /app/trmnl-servarr-collector.sh
 
-# Environment variables (required)
+# Optional: Copy default config if it exists
+COPY config.example.yaml /app/
+
+# Environment variables for single-instance mode (optional)
 ENV SERVARR_URL=""
 ENV API_KEY=""
 ENV WEBHOOK_URL=""
-
-# Optional environment variables
 ENV APP_TYPE=""
 ENV CALENDAR_DAYS="7"
+ENV CALENDAR_DAYS_BEFORE="0"
+ENV CALENDAR_ONLY=""
 ENV INTERVAL="0"
 ENV TZ="UTC"
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f "${SERVARR_URL}/api/v3/system/status" -H "X-Api-Key: ${API_KEY}" || exit 1
+# Health check (works for single-instance mode)
+HEALTHCHECK --interval=60s --timeout=10s --start-period=10s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8080/health', timeout=5)" || exit 0
 
 # Entry point script
 COPY --chmod=755 <<'EOF' /app/entrypoint.sh
 #!/bin/bash
 set -e
 
-# Validate required environment variables
-if [[ -z "$SERVARR_URL" ]]; then
-    echo "ERROR: SERVARR_URL environment variable is required"
+# Check if config file exists
+if [[ -f "/app/config.yaml" ]]; then
+    echo "Starting with config file..."
+    exec python /app/trmnl_collector.py --config /app/config.yaml
+fi
+
+# Fall back to environment variables (single instance mode)
+if [[ -z "$SERVARR_URL" || -z "$API_KEY" ]]; then
+    echo "ERROR: Either mount a config.yaml file or provide SERVARR_URL and API_KEY environment variables"
     exit 1
 fi
 
-if [[ -z "$API_KEY" ]]; then
-    echo "ERROR: API_KEY environment variable is required"
-    exit 1
-fi
+# Build command arguments from environment variables
+ARGS="-u $SERVARR_URL -k $API_KEY"
 
-if [[ -z "$WEBHOOK_URL" ]]; then
-    echo "ERROR: WEBHOOK_URL environment variable is required"
-    exit 1
+if [[ -n "$WEBHOOK_URL" ]]; then
+    ARGS="$ARGS -w $WEBHOOK_URL"
 fi
-
-# Build command arguments
-ARGS="-u $SERVARR_URL -k $API_KEY -w $WEBHOOK_URL"
 
 if [[ -n "$APP_TYPE" ]]; then
     ARGS="$ARGS -t $APP_TYPE"
@@ -83,12 +89,24 @@ if [[ -n "$CALENDAR_DAYS" ]]; then
     ARGS="$ARGS -d $CALENDAR_DAYS"
 fi
 
+if [[ -n "$CALENDAR_DAYS_BEFORE" && "$CALENDAR_DAYS_BEFORE" != "0" ]]; then
+    ARGS="$ARGS -b $CALENDAR_DAYS_BEFORE"
+fi
+
+if [[ -n "$CALENDAR_ONLY" && "$CALENDAR_ONLY" == "true" ]]; then
+    ARGS="$ARGS -c"
+fi
+
 if [[ -n "$INTERVAL" && "$INTERVAL" != "0" ]]; then
     ARGS="$ARGS -i $INTERVAL"
 fi
 
-# Run the collector
-exec /app/trmnl-servarr-collector.sh $ARGS
+if [[ -n "$TZ" ]]; then
+    ARGS="$ARGS -z $TZ"
+fi
+
+# Run the Python collector
+exec python /app/trmnl_collector.py $ARGS
 EOF
 
 ENTRYPOINT ["/app/entrypoint.sh"]
