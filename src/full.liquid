@@ -9,10 +9,10 @@
 {% assign show_calendar = trmnl.plugin_settings.custom_fields_values.show_calendar | default: "yes" | downcase %}
 {% assign show_recently_added = trmnl.plugin_settings.custom_fields_values.show_recently_added | default: "yes" | downcase %}
 {% assign show_stats = trmnl.plugin_settings.custom_fields_values.show_stats | default: "yes" | downcase %}
-{% assign max_queue = trmnl.plugin_settings.custom_fields_values.max_queue_items | default: 3 %}
-{% assign max_calendar_items = trmnl.plugin_settings.custom_fields_values.max_calendar_items | default: 3 %}
-{% assign max_recently_added_items = trmnl.plugin_settings.custom_fields_values.max_recently_added_items | default: 3 %}
-{% assign max_monthly_events_per_day = trmnl.plugin_settings.custom_fields_values.max_monthly_events_per_day | default: 2 %}
+{% assign max_queue = trmnl.plugin_settings.custom_fields_values.max_queue_items | default: 3 | plus: 0 %}
+{% assign max_calendar_items = trmnl.plugin_settings.custom_fields_values.max_calendar_items | default: 3 | plus: 0 %}
+{% assign max_recently_added_items = trmnl.plugin_settings.custom_fields_values.max_recently_added_items | default: 3 | plus: 0 %}
+{% assign max_monthly_events_per_day = trmnl.plugin_settings.custom_fields_values.max_monthly_events_per_day | default: 2 | plus: 0 %}
 {% assign show_health = trmnl.plugin_settings.custom_fields_values.show_health | default: "yes" | downcase %}
 {% assign show_network = trmnl.plugin_settings.custom_fields_values.show_network | default: "yes" | downcase %}
 {% assign show_quality = trmnl.plugin_settings.custom_fields_values.show_quality | default: "yes" | downcase %}
@@ -535,12 +535,14 @@
 <!-- ===== WEEKLY CALENDAR VIEW ===== -->
 {% comment %}
   Weekly view always starts on Sunday.
-  We calculate today's day-of-week (0=Sun, 6=Sat) to find offset from Sunday.
+  We calculate today's day-of-week (0=Sun, 6=Sat) dynamically from last_updated.
   Then each column shows Sun-Sat with proper days_until mapping.
-  Test data reference: Jan 15 = Wednesday (day 3 of week starting Sun Jan 12)
 {% endcomment %}
-{% assign today_dow = 3 %}{% comment %} Wednesday = 3 (Sun=0, Mon=1, Tue=2, Wed=3...) {% endcomment %}
-{% assign week_start_offset = 0 | minus: today_dow %}{% comment %} How many days back to Sunday {% endcomment %}
+{% assign today_timestamp = last_updated | date: "%s" | plus: 0 %}
+{% assign today_dow = last_updated | date: "%w" | plus: 0 %}
+{% assign seconds_per_day = 86400 %}
+{% assign days_back_to_sunday = today_dow | times: seconds_per_day %}
+{% assign week_start_timestamp = today_timestamp | minus: days_back_to_sunday %}
 <div class="calendar-container">
   <div class="calendar-card">
     <div class="calendar-header">
@@ -551,22 +553,25 @@
     </div>
     <div class="calendar-week-grid">
       {% comment %} Generate 7 days: Sunday through Saturday {% endcomment %}
-      {% assign day_names = "Sun,Mon,Tue,Wed,Thu,Fri,Sat" | split: "," %}
-      {% assign day_nums = "12,13,14,15,16,17,18" | split: "," %}{% comment %} Week of Jan 12-18 {% endcomment %}
       {% for col in (0..6) %}
-        {% assign col_days_until = col | minus: today_dow %}{% comment %} days_until relative to today {% endcomment %}
+        {% assign col_days_until = col | minus: today_dow | plus: 0 %}{% comment %} days_until relative to today (plus: 0 ensures integer) {% endcomment %}
         {% assign is_today = false %}
         {% if col == today_dow %}{% assign is_today = true %}{% endif %}
+        {% assign day_offset_seconds = col | times: seconds_per_day %}
+        {% assign day_timestamp = week_start_timestamp | plus: day_offset_seconds %}
+        {% assign day_name = day_timestamp | date: "%a" %}
+        {% assign day_num = day_timestamp | date: "%-d" %}
         <div class="calendar-day-col">
           <div class="calendar-day-header{% if is_today %} today{% endif %}">
-            <div class="calendar-day-name">{{ day_names[col] }}</div>
-            <div class="calendar-day-date">{{ day_nums[col] }}</div>
+            <div class="calendar-day-name">{{ day_name }}</div>
+            <div class="calendar-day-date">{{ day_num }}</div>
           </div>
           <div class="calendar-day-items">
             {% assign day_count = 0 %}
             {% assign shown_count = 0 %}
             {% for item in calendar.items %}
-              {% if item.days_until == col_days_until %}
+              {% assign item_days_until = item.days_until | plus: 0 %}
+              {% if item_days_until == col_days_until %}
                 {% assign day_count = day_count | plus: 1 %}
                 {% if shown_count < max_calendar_items %}
                   <div class="calendar-event">
@@ -590,11 +595,24 @@
 
 {% when "calendar_-_monthly" %}
 <!-- ===== MONTHLY CALENDAR VIEW ===== -->
-{% comment %} Get current month/year from last_updated {% endcomment %}
-{% assign current_month_num = last_updated | date: "%m" | plus: 0 %}
+{% comment %}
+  Dynamic monthly calendar - calculates all dates from last_updated.
+  Uses Unix timestamp arithmetic (86400 seconds per day).
+{% endcomment %}
+{% assign current_month_num = last_updated | date: "%m" %}
 {% assign current_month_name = last_updated | date: "%B" %}
 {% assign current_year = last_updated | date: "%Y" %}
-{% assign current_day = last_updated | date: "%d" | plus: 0 %}
+{% assign current_day = last_updated | date: "%-d" | plus: 0 %}
+{% assign seconds_per_day = 86400 %}
+
+{% comment %} Build first-of-month string and get its timestamp and day-of-week {% endcomment %}
+{% assign first_of_month_str = current_year | append: "-" | append: current_month_num | append: "-01" %}
+{% assign first_of_month_ts = first_of_month_str | date: "%s" | plus: 0 %}
+{% assign first_dow = first_of_month_str | date: "%w" | plus: 0 %}
+
+{% comment %} Calculate the start of the calendar grid (may be in previous month) {% endcomment %}
+{% assign grid_start_offset = first_dow | times: seconds_per_day %}
+{% assign grid_start_ts = first_of_month_ts | minus: grid_start_offset %}
 
 <div class="calendar-container">
   <div class="calendar-card">
@@ -615,102 +633,43 @@
         <div class="calendar-month-header-cell">Sat</div>
       </div>
       <div class="calendar-month-body">
-        {% comment %} Week 1: Dec 29-Jan 4 {% endcomment %}
-        {% for d in (29..31) %}<div class="calendar-month-cell other-month"><div class="calendar-month-day-num">{{ d }}</div></div>{% endfor %}
-        {% for d in (1..4) %}
-          <div class="calendar-month-cell">
-            <div class="calendar-month-day-num">{{ d }}</div>
-            <div class="calendar-month-events">
-              {% for item in calendar.items %}{% assign item_day = item.air_date | date: "%d" | plus: 0 %}{% if item_day == d %}{% assign item_month = item.air_date | date: "%m" | plus: 0 %}{% if item_month == current_month_num %}<div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>{% endif %}{% endif %}{% endfor %}
-            </div>
-          </div>
-        {% endfor %}
+        {% comment %} Generate 35 cells (5 weeks x 7 days) {% endcomment %}
+        {% for cell in (0..34) %}
+          {% assign cell_offset = cell | times: seconds_per_day %}
+          {% assign cell_ts = grid_start_ts | plus: cell_offset %}
+          {% assign cell_day = cell_ts | date: "%-d" | plus: 0 %}
+          {% assign cell_month = cell_ts | date: "%m" %}
+          {% assign cell_date_str = cell_ts | date: "%Y-%m-%d" %}
 
-        {% comment %} Week 2: Jan 5-11 {% endcomment %}
-        {% for d in (5..11) %}
-          <div class="calendar-month-cell">
-            <div class="calendar-month-day-num">{{ d }}</div>
-            <div class="calendar-month-events">
-              {% for item in calendar.items %}{% assign item_day = item.air_date | date: "%d" | plus: 0 %}{% if item_day == d %}{% assign item_month = item.air_date | date: "%m" | plus: 0 %}{% if item_month == current_month_num %}<div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>{% endif %}{% endif %}{% endfor %}
-            </div>
-          </div>
-        {% endfor %}
+          {% comment %} Determine if this cell is in the current month {% endcomment %}
+          {% assign is_current_month = false %}
+          {% if cell_month == current_month_num %}{% assign is_current_month = true %}{% endif %}
 
-        {% comment %} Week 3: Jan 12-18 {% endcomment %}
-        {% for d in (12..18) %}
-          <div class="calendar-month-cell{% if d == current_day %} today{% endif %}">
-            <div class="calendar-month-day-num">{{ d }}</div>
+          {% comment %} Determine if this is today {% endcomment %}
+          {% assign is_today = false %}
+          {% if is_current_month and cell_day == current_day %}{% assign is_today = true %}{% endif %}
+
+          <div class="calendar-month-cell{% if is_today %} today{% endif %}{% unless is_current_month %} other-month{% endunless %}">
+            <div class="calendar-month-day-num">{{ cell_day }}</div>
+            {% if is_current_month %}
             <div class="calendar-month-events">
               {% assign event_count = 0 %}
               {% for item in calendar.items %}
-                {% assign item_day = item.air_date | date: "%d" | plus: 0 %}
-                {% if item_day == d %}
-                  {% assign item_month = item.air_date | date: "%m" | plus: 0 %}
-                  {% if item_month == current_month_num %}
-                    {% if event_count < max_monthly_events_per_day %}
-                      <div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>
-                    {% endif %}
-                    {% assign event_count = event_count | plus: 1 %}
+                {% assign item_date = item.air_date | date: "%Y-%m-%d" %}
+                {% if item_date == cell_date_str %}
+                  {% if event_count < max_monthly_events_per_day %}
+                    <div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>
                   {% endif %}
+                  {% assign event_count = event_count | plus: 1 %}
                 {% endif %}
               {% endfor %}
               {% if event_count > max_monthly_events_per_day %}
                 <div class="calendar-month-more">+{{ event_count | minus: max_monthly_events_per_day }} more</div>
               {% endif %}
             </div>
+            {% endif %}
           </div>
         {% endfor %}
-
-        {% comment %} Week 4: Jan 19-25 {% endcomment %}
-        {% for d in (19..25) %}
-          <div class="calendar-month-cell">
-            <div class="calendar-month-day-num">{{ d }}</div>
-            <div class="calendar-month-events">
-              {% assign event_count = 0 %}
-              {% for item in calendar.items %}
-                {% assign item_day = item.air_date | date: "%d" | plus: 0 %}
-                {% if item_day == d %}
-                  {% assign item_month = item.air_date | date: "%m" | plus: 0 %}
-                  {% if item_month == current_month_num %}
-                    {% if event_count < max_monthly_events_per_day %}
-                      <div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>
-                    {% endif %}
-                    {% assign event_count = event_count | plus: 1 %}
-                  {% endif %}
-                {% endif %}
-              {% endfor %}
-              {% if event_count > max_monthly_events_per_day %}
-                <div class="calendar-month-more">+{{ event_count | minus: max_monthly_events_per_day }} more</div>
-              {% endif %}
-            </div>
-          </div>
-        {% endfor %}
-
-        {% comment %} Week 5: Jan 26-Feb 1 {% endcomment %}
-        {% for d in (26..31) %}
-          <div class="calendar-month-cell">
-            <div class="calendar-month-day-num">{{ d }}</div>
-            <div class="calendar-month-events">
-              {% assign event_count = 0 %}
-              {% for item in calendar.items %}
-                {% assign item_day = item.air_date | date: "%d" | plus: 0 %}
-                {% if item_day == d %}
-                  {% assign item_month = item.air_date | date: "%m" | plus: 0 %}
-                  {% if item_month == current_month_num %}
-                    {% if event_count < max_monthly_events_per_day %}
-                      <div class="calendar-month-event">{{ item.title | truncate: 12 }}</div>
-                    {% endif %}
-                    {% assign event_count = event_count | plus: 1 %}
-                  {% endif %}
-                {% endif %}
-              {% endfor %}
-              {% if event_count > max_monthly_events_per_day %}
-                <div class="calendar-month-more">+{{ event_count | minus: max_monthly_events_per_day }} more</div>
-              {% endif %}
-            </div>
-          </div>
-        {% endfor %}
-        <div class="calendar-month-cell other-month"><div class="calendar-month-day-num">1</div></div>
       </div>
     </div>
   </div>
