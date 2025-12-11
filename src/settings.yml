@@ -15,10 +15,10 @@ custom_fields:
   description: Choose between dashboard view or calendar-only views
   options:
   - Dashboard
-  - Calendar - Daily
-  - Calendar - Weekly
-  - Calendar - Monthly
-  default: dashboard
+  - Calendar_Daily
+  - Calendar_Weekly
+  - Calendar_Monthly
+  default: Dashboard
 - keyname: show_queue
   field_type: select
   name: Show Download Queue
@@ -26,7 +26,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'yes'
+  default: 'Yes'
 - keyname: show_calendar
   field_type: select
   name: Show Upcoming Releases
@@ -34,7 +34,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'yes'
+  default: 'Yes'
 - keyname: show_recently_added
   field_type: select
   name: Show Recently Added
@@ -42,7 +42,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'yes'
+  default: 'Yes'
 - keyname: show_stats
   field_type: select
   name: Show Library Statistics
@@ -50,7 +50,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'yes'
+  default: 'Yes'
 - keyname: max_queue_items
   field_type: number
   name: Max Queue Items
@@ -90,7 +90,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'yes'
+  default: 'Yes'
 - keyname: show_library_size
   field_type: select
   name: Show Library Size
@@ -98,7 +98,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'yes'
+  default: 'Yes'
 - keyname: show_wanted
   field_type: select
   name: Show Wanted Count
@@ -106,7 +106,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'yes'
+  default: 'Yes'
 - keyname: show_network
   field_type: select
   name: Show Network/Studio
@@ -114,7 +114,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'yes'
+  default: 'Yes'
 - keyname: show_quality
   field_type: select
   name: Show Quality in Queue
@@ -122,7 +122,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'yes'
+  default: 'Yes'
 - keyname: show_eta
   field_type: select
   name: Show ETA in Queue
@@ -130,7 +130,7 @@ custom_fields:
   options:
   - 'Yes'
   - 'No'
-  default: 'yes'
+  default: 'Yes'
 - keyname: date_format
   field_type: select
   name: Date Format
@@ -139,7 +139,7 @@ custom_fields:
   - Relative
   - Short
   - Full
-  default: relative
+  default: Relative
 - keyname: author_info
   name: About This Plugin
   field_type: author_bio

@@ -4,7 +4,7 @@
   Supports: Sonarr, Radarr, Lidarr, Readarr, Prowlarr
 {% endcomment %}
 
-{% assign display_mode = trmnl.plugin_settings.custom_fields_values.display_mode | default: "dashboard" %}
+{% assign display_mode = trmnl.plugin_settings.custom_fields_values.display_mode | default: "Dashboard" | downcase %}
 {% assign show_queue = trmnl.plugin_settings.custom_fields_values.show_queue | default: "yes" | downcase %}
 {% assign show_calendar = trmnl.plugin_settings.custom_fields_values.show_calendar | default: "yes" | downcase %}
 {% assign show_recently_added = trmnl.plugin_settings.custom_fields_values.show_recently_added | default: "yes" | downcase %}
@@ -495,7 +495,7 @@
 </style>
 
 {% case display_mode %}
-{% when "calendar_-_daily" %}
+{% when "calendar_daily" %}
 <!-- ===== DAILY CALENDAR VIEW ===== -->
 <div class="calendar-container">
   <div class="calendar-card">
@@ -531,7 +531,7 @@
   </div>
 </div>
 
-{% when "calendar_-_weekly" %}
+{% when "calendar_weekly" %}
 <!-- ===== WEEKLY CALENDAR VIEW ===== -->
 {% comment %}
   Weekly view always starts on Sunday.
@@ -593,7 +593,7 @@
   </div>
 </div>
 
-{% when "calendar_-_monthly" %}
+{% when "calendar_monthly" %}
 <!-- ===== MONTHLY CALENDAR VIEW ===== -->
 {% comment %}
   Dynamic monthly calendar - calculates all dates from last_updated.
