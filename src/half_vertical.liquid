@@ -379,7 +379,7 @@
   </span>
   <span class="instance">
     {% if last_updated %}
-      {{ last_updated | date: "%s" | plus: trmnl.user.utc_offset | date: "%H:%M" }}
+      {{ last_updated | date: "%s" | plus: trmnl.user.utc_offset | date: "%Y-%m-%d %H:%M" }} {{ timezone }}
     {% else %}
       --:--
     {% endif %}

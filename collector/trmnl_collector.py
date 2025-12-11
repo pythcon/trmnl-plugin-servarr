@@ -23,8 +23,9 @@ import os
 import signal
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
+from zoneinfo import ZoneInfo
 
 import requests
 import yaml
@@ -564,6 +565,21 @@ class ServarrCollector:
             size /= 1024
         return f'{size:.1f} PB'
 
+    def _get_timezone_abbrev(self) -> str:
+        """Get timezone abbreviation from configured timezone."""
+        if not self.timezone:
+            return 'UTC'
+
+        try:
+            tz = ZoneInfo(self.timezone)
+            now = datetime.now(tz)
+            # Get the abbreviation (e.g., EST, PST, UTC)
+            abbrev = now.strftime('%Z')
+            return abbrev if abbrev else self.timezone
+        except Exception:
+            # If timezone is invalid, return it as-is or UTC
+            return self.timezone if self.timezone else 'UTC'
+
     def collect(self) -> Dict[str, Any]:
         """Collect all data from this instance."""
         logger.info(f"[{self.name}] Collecting data from {self.url}")
@@ -573,6 +589,9 @@ class ServarrCollector:
         self.api_version = self._get_api_version(app_type)
         logger.info(f"[{self.name}] Detected app type: {app_type}, API version: {self.api_version}")
 
+        # Get timezone abbreviation for display
+        tz_abbrev = self._get_timezone_abbrev()
+
         # Build payload
         if self.calendar_only:
             # Calendar only mode - minimal payload
@@ -581,7 +600,8 @@ class ServarrCollector:
                 'merge_variables': {
                     'app_name': app_type.capitalize(),
                     'app_type': app_type,
-                    'last_updated': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    'last_updated': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    'timezone': tz_abbrev,
                     'calendar': calendar,
                 }
             }
@@ -597,7 +617,8 @@ class ServarrCollector:
                 'merge_variables': {
                     'app_name': app_type.capitalize(),
                     'app_type': app_type,
-                    'last_updated': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    'last_updated': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    'timezone': tz_abbrev,
                     'health': health,
                     'queue': queue,
                     'calendar': calendar,

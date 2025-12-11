@@ -973,5 +973,5 @@
     </span>
     {{ app_name | default: "Servarr" }}
   </span>
-  <span class="instance">{{ last_updated | date: "%s" | plus: trmnl.user.utc_offset | date: "%H:%M" }}</span>
+  <span class="instance">{{ last_updated | date: "%s" | plus: trmnl.user.utc_offset | date: "%Y-%m-%d %H:%M" }} {{ timezone }}</span>
 </div>
