@@ -17,9 +17,7 @@ services:
   # Single container handles ALL your Servarr instances
   # Just define them in config.yaml
   trmnl-collector:
-    image: ghcr.io/usetrmnl/trmnl-servarr-collector:latest
-    # Or use pre-built image when available:
-    # image: ghcr.io/yourusername/trmnl-servarr-collector:latest
+    image: ghcr.io/pythcon/trmnl-servarr-collector:latest
     container_name: trmnl-collector
     restart: unless-stopped
     volumes:

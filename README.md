@@ -1,6 +1,8 @@
-# TRMNL Servarr Plugin
+# TRMNL Servarr Dashboard
 
-A TRMNL plugin for displaying data from Servarr applications (Sonarr, Radarr, Lidarr, Readarr, Prowlarr) on your TRMNL e-ink device.
+A beautiful dashboard for your Servarr media stack on TRMNL e-ink displays. Monitor download queues, upcoming releases, recently added content, and library statistics from Sonarr, Radarr, Lidarr, Readarr, or Prowlarr.
+
+![Servarr Dashboard](https://raw.githubusercontent.com/pythcon/trmnl-plugin-servarr/master/assets/logo.png)
 
 ## Features
 
@@ -13,115 +15,114 @@ A TRMNL plugin for displaying data from Servarr applications (Sonarr, Radarr, Li
 - Multiple display modes (Dashboard, Calendar Daily/Weekly/Monthly)
 - Responsive layouts for all TRMNL screen configurations
 
-## Project Structure
-
-```
-trmnl-plugin-servarr/
-├── .trmnlp.yml              # Local development configuration
-├── README.md                # This file
-├── bin/
-│   └── dev                  # Development server startup script
-├── collector/
-│   ├── trmnl-servarr-collector.sh  # Data collection script
-│   ├── Dockerfile           # Docker build for collector
-│   ├── entrypoint.sh        # Docker entrypoint
-│   └── docker-compose.example.yml  # Example Docker setup
-├── examples/
-│   └── *.yml                # Test data examples for different modes
-└── src/
-    ├── settings.yml         # Plugin metadata and custom fields
-    ├── full.liquid          # Full screen layout (800x480)
-    ├── half_horizontal.liquid  # Horizontal half layout (800x240)
-    ├── half_vertical.liquid    # Vertical half layout (400x480)
-    └── quadrant.liquid      # Quadrant layout (400x240)
-```
-
 ## Quick Start
 
-### 1. Create a Private Plugin in TRMNL
+### 1. Install the Plugin from TRMNL
 
-1. Go to your TRMNL dashboard
-2. Create a new Private Plugin
-3. Copy the webhook URL
+1. Go to your [TRMNL Dashboard](https://usetrmnl.com)
+2. Navigate to **Plugin Directory**
+3. Search for **"Servarr Dashboard"**
+4. Click **Add to My Plugins**
+5. Copy the **Webhook URL** from the plugin settings
 
-### 2. Run the Collector
+### 2. Set Up the Collector
 
-The collector script fetches data from your Servarr apps and sends it to TRMNL.
-
-#### Direct Execution
-
-```bash
-# Basic usage (outputs to terminal for debugging)
-./collector/trmnl-servarr-collector.sh \
-  -u http://localhost:8989 \
-  -k your-api-key
-
-# Send to TRMNL webhook
-./collector/trmnl-servarr-collector.sh \
-  -u http://localhost:8989 \
-  -k your-api-key \
-  -w https://usetrmnl.com/api/custom_plugins/your-webhook-id
-
-# Run continuously every 15 minutes
-./collector/trmnl-servarr-collector.sh \
-  -u http://localhost:8989 \
-  -k your-api-key \
-  -w https://usetrmnl.com/api/custom_plugins/your-webhook-id \
-  -i 900
-
-# With verbose error logging
-./collector/trmnl-servarr-collector.sh \
-  -u http://localhost:8989 \
-  -k your-api-key \
-  -w https://usetrmnl.com/api/custom_plugins/your-webhook-id \
-  -v
-```
-
-#### Docker
+The collector fetches data from your Servarr apps and sends it to TRMNL. Run it with Docker:
 
 ```bash
-# Build the image
-cd collector
-docker build -t trmnl-servarr-collector .
+# Create a directory for the collector
+mkdir trmnl-servarr && cd trmnl-servarr
 
-# Run once
-docker run --rm \
-  -e SERVARR_URL=http://sonarr:8989 \
-  -e API_KEY=your-api-key \
-  -e WEBHOOK_URL=https://usetrmnl.com/api/custom_plugins/xxx \
-  trmnl-servarr-collector
+# Download the required files
+curl -O https://raw.githubusercontent.com/pythcon/trmnl-plugin-servarr/master/collector/docker-compose.yml
+curl -O https://raw.githubusercontent.com/pythcon/trmnl-plugin-servarr/master/collector/config.example.yaml
 
-# Run continuously (every 15 minutes)
-docker run -d \
-  -e SERVARR_URL=http://sonarr:8989 \
-  -e API_KEY=your-api-key \
-  -e WEBHOOK_URL=https://usetrmnl.com/api/custom_plugins/xxx \
-  -e INTERVAL=900 \
-  trmnl-servarr-collector
+# Create your config from the example
+cp config.example.yaml config.yaml
 ```
 
-See `collector/docker-compose.example.yml` for a complete Docker Compose setup.
+### 3. Configure Your Servarr Instances
 
-## Collector Options
+Edit `config.yaml` with your Servarr details:
 
-| Option | Env Variable | Description | Default |
-|--------|--------------|-------------|---------|
-| `-u, --url` | `SERVARR_URL` | Servarr instance URL | Required |
-| `-k, --api-key` | `API_KEY` | Servarr API key | Required |
-| `-w, --webhook` | `WEBHOOK_URL` | TRMNL webhook URL | None (prints to stdout) |
-| `-t, --type` | `APP_TYPE` | App type (sonarr/radarr/lidarr/readarr/prowlarr) | Auto-detected |
-| `-d, --days` | `CALENDAR_DAYS` | Calendar days to fetch | 7 |
-| `-z, --timezone` | `TZ` | Timezone for date calculations | System timezone |
-| `-i, --interval` | `INTERVAL` | Run interval in seconds (0 = run once) | 0 |
-| `-v, --verbose` | - | Show response body on errors | Off |
+```yaml
+# Global settings
+interval: 900              # Collection interval in seconds (900 = 15 minutes)
+timezone: America/New_York # Your timezone (for timestamp display)
 
-## Plugin Configuration
+# Instance definitions
+instances:
+  - name: sonarr
+    url: http://localhost:8989          # Your Sonarr URL
+    api_key: your-sonarr-api-key        # Settings > General > API Key
+    webhook: https://usetrmnl.com/api/custom_plugins/your-webhook-id
+```
 
-When adding this plugin to your TRMNL device, you can configure:
+**Finding your API Key:** In any Servarr app, go to **Settings > General > Security > API Key**
 
-| Field | Description | Options |
-|-------|-------------|---------|
-| Display Mode | Layout style | Dashboard, Calendar - Daily, Calendar - Weekly, Calendar - Monthly |
+### 4. Start the Collector
+
+```bash
+docker compose up -d
+```
+
+That's it! The collector will now send data to your TRMNL device every 15 minutes.
+
+## Multiple Servarr Instances
+
+Add multiple instances to your `config.yaml`:
+
+```yaml
+interval: 900
+timezone: America/New_York
+
+instances:
+  # Each instance needs its own webhook URL from a separate plugin install
+  - name: sonarr
+    url: http://localhost:8989
+    api_key: your-sonarr-api-key
+    webhook: https://usetrmnl.com/api/custom_plugins/sonarr-webhook-id
+
+  - name: radarr
+    url: http://localhost:7878
+    api_key: your-radarr-api-key
+    webhook: https://usetrmnl.com/api/custom_plugins/radarr-webhook-id
+
+  - name: lidarr
+    url: http://localhost:8686
+    api_key: your-lidarr-api-key
+    webhook: https://usetrmnl.com/api/custom_plugins/lidarr-webhook-id
+```
+
+## Configuration Reference
+
+### Global Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `interval` | Collection interval in seconds (0 = run once) | `900` |
+| `timezone` | Timezone for display (e.g., `America/New_York`, `Europe/London`) | `UTC` |
+
+### Instance Settings
+
+| Setting | Description | Required |
+|---------|-------------|----------|
+| `name` | Display name for logs | Yes |
+| `url` | Servarr instance URL | Yes |
+| `api_key` | Servarr API key | Yes |
+| `webhook` | TRMNL webhook URL | Yes |
+| `type` | App type (auto-detected if not set) | No |
+| `calendar_days` | Days forward for calendar | No (default: 7) |
+| `calendar_days_before` | Days back for calendar | No (default: 0) |
+| `calendar_only` | Only send calendar data | No (default: false) |
+
+### Plugin Display Settings
+
+Configure these in your TRMNL plugin settings:
+
+| Setting | Description | Options |
+|---------|-------------|---------|
+| Display Mode | Layout style | Dashboard, Calendar_Daily, Calendar_Weekly, Calendar_Monthly |
 | Show Queue | Display download queue | Yes/No |
 | Show Calendar | Display upcoming releases | Yes/No |
 | Show Recently Added | Display recently imported media | Yes/No |
@@ -146,109 +147,145 @@ Shows all releases for the current day with times.
 ### Calendar - Monthly
 Full month grid with releases marked on each day.
 
-## Layout Sizes
+## Troubleshooting
 
-| Layout | Dimensions | Best For |
-|--------|------------|----------|
-| Full | 800x480 | Dashboard with all sections, calendar views |
-| Half Horizontal | 800x240 | Queue + stats side by side |
-| Half Vertical | 400x480 | Stacked queue, calendar, stats |
-| Quadrant | 400x240 | Queue count + next up + 2 stats |
+### View Collector Logs
+
+```bash
+docker compose logs -f
+```
+
+### Test Without Sending to TRMNL
+
+Run with `--dry-run` to see the JSON output:
+
+```bash
+docker compose run --rm trmnl-collector python /app/trmnl_collector.py --config /app/config.yaml --dry-run
+```
+
+### Common Issues
+
+**"Cannot connect to..."**
+- Verify your Servarr URL is accessible from the Docker container
+- If using `localhost`, try using your machine's IP address or `host.docker.internal` (on Docker Desktop)
+
+**"Authentication failed..."**
+- Double-check your API key in Settings > General > API Key
+
+**Times are wrong**
+- Set the correct `timezone` in your config.yaml (e.g., `America/New_York`, `Europe/London`)
+
+## Alternative Installation Methods
+
+### Docker Run (Single Instance)
+
+If you only have one Servarr instance, you can use `docker run` with environment variables instead of a config file:
+
+```bash
+docker run -d \
+  --name trmnl-servarr \
+  --restart unless-stopped \
+  -e SERVARR_URL=http://localhost:8989 \
+  -e API_KEY=your-api-key \
+  -e WEBHOOK_URL=https://usetrmnl.com/api/custom_plugins/xxx \
+  -e INTERVAL=900 \
+  -e TZ=America/New_York \
+  ghcr.io/pythcon/trmnl-servarr-collector:latest
+```
+
+| Environment Variable | Description | Required |
+|---------------------|-------------|----------|
+| `SERVARR_URL` | Servarr instance URL | Yes |
+| `API_KEY` | Servarr API key | Yes |
+| `WEBHOOK_URL` | TRMNL webhook URL | Yes |
+| `INTERVAL` | Collection interval in seconds (0 = run once) | No (default: 0) |
+| `TZ` | Timezone for display | No (default: UTC) |
+| `APP_TYPE` | App type (sonarr/radarr/lidarr/readarr/prowlarr) | No (auto-detected) |
+| `CALENDAR_DAYS` | Days forward for calendar | No (default: 7) |
+| `CALENDAR_DAYS_BEFORE` | Days back for calendar | No (default: 0) |
+| `CALENDAR_ONLY` | Only send calendar data (true/false) | No (default: false) |
+
+### Python Script (No Docker)
+
+Run the collector directly with Python if you prefer not to use Docker:
+
+```bash
+# Clone the repository
+git clone https://github.com/pythcon/trmnl-plugin-servarr.git
+cd trmnl-plugin-servarr/collector
+
+# Install dependencies
+pip install requests pyyaml
+
+# Run with config file (recommended for multiple instances)
+python trmnl_collector.py --config config.yaml
+
+# Or run with CLI arguments (single instance)
+python trmnl_collector.py \
+  -u http://localhost:8989 \
+  -k your-api-key \
+  -w https://usetrmnl.com/api/custom_plugins/xxx \
+  -z America/New_York \
+  -i 900
+```
+
+#### CLI Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-C, --config` | Path to YAML config file | None |
+| `-u, --url` | Servarr instance URL | Required (if no config) |
+| `-k, --api-key` | Servarr API key | Required (if no config) |
+| `-w, --webhook` | TRMNL webhook URL | None (prints to stdout) |
+| `-t, --type` | App type (sonarr/radarr/lidarr/readarr/prowlarr) | Auto-detected |
+| `-d, --days` | Calendar days forward | 7 |
+| `-b, --days-before` | Calendar days back | 0 |
+| `-c, --calendar-only` | Only send calendar data | Off |
+| `-z, --timezone` | Timezone for display | UTC |
+| `-i, --interval` | Run interval in seconds (0 = run once) | 0 |
+| `-v, --verbose` | Verbose output | Off |
+| `--dry-run` | Print JSON, don't send to webhook | Off |
+
+#### Running as a Systemd Service
+
+To run the collector as a background service on Linux:
+
+```bash
+# Create service file
+sudo tee /etc/systemd/system/trmnl-servarr.service << EOF
+[Unit]
+Description=TRMNL Servarr Collector
+After=network.target
+
+[Service]
+Type=simple
+User=$USER
+WorkingDirectory=/path/to/trmnl-plugin-servarr/collector
+ExecStart=/usr/bin/python3 trmnl_collector.py --config config.yaml
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start the service
+sudo systemctl daemon-reload
+sudo systemctl enable trmnl-servarr
+sudo systemctl start trmnl-servarr
+
+# Check status
+sudo systemctl status trmnl-servarr
+```
 
 ## Development
 
-### Prerequisites
-
-- [trmnlp](https://github.com/usetrmnl/trmnlp) - TRMNL Plugin Development Server
-- Ruby 3.x (for trmnlp gem) OR Docker
-
-### Start the Development Server
-
-```bash
-# Using the dev script
-./bin/dev
-
-# Or directly with trmnlp
-trmnlp serve
-
-# Or with Docker
-docker run -v $(pwd):/plugin -p 4567:4567 trmnl/trmnlp serve
-```
-
-The development server will:
-- Watch for file changes in the `src/` directory
-- Auto-reload templates when modified
-- Render previews at `http://localhost:4567`
-
-### Test with Example Data
-
-Copy example data to test different display modes:
-
-```bash
-# Test Dashboard mode
-cp examples/sonarr-dashboard.yml .trmnlp.yml
-
-# Test Calendar Weekly
-cp examples/sonarr-calendar-weekly.yml .trmnlp.yml
-
-# Then run the dev server
-./bin/dev
-```
-
-## Deployment
-
-### Push Templates to TRMNL
-
-```bash
-trmnlp login
-trmnlp push
-```
-
-### Set Up Continuous Collection
-
-Use Docker Compose to run collectors for each Servarr app:
-
-```yaml
-services:
-  trmnl-collector-sonarr:
-    build: ./collector
-    environment:
-      - SERVARR_URL=http://sonarr:8989
-      - API_KEY=your-api-key
-      - WEBHOOK_URL=https://usetrmnl.com/api/custom_plugins/xxx
-      - INTERVAL=900
-```
-
-## Troubleshooting
-
-### Webhook Returns Error
-
-Use verbose mode to see the response:
-
-```bash
-./collector/trmnl-servarr-collector.sh -u ... -k ... -w ... -v
-```
-
-### Empty Data
-
-- Check API key is correct (Settings > General in your Servarr app)
-- Verify the URL is accessible from where the collector runs
-- Run without `-w` to see the JSON output
-
-### Times Are Wrong
-
-Use the `-z` flag to set the correct timezone:
-
-```bash
-./collector/trmnl-servarr-collector.sh -u ... -k ... -w ... -z America/New_York
-```
+See the [Development Guide](docs/DEVELOPMENT.md) for information on local development and contributing.
 
 ## Resources
 
-- [TRMNL Framework v2](https://usetrmnl.com/framework) - Component reference
-- [TRMNL Liquid](https://github.com/usetrmnl/trmnl-liquid) - Templating guide
-- [trmnlp Documentation](https://github.com/usetrmnl/trmnlp) - Development server docs
-- [Plugin Import/Export](https://help.usetrmnl.com/en/articles/10542599-importing-and-exporting-private-plugins) - Sharing plugins
+- [TRMNL](https://usetrmnl.com) - E-ink smart display
+- [Servarr Wiki](https://wiki.servarr.com) - Sonarr, Radarr, Lidarr, Readarr, Prowlarr documentation
 
 ## License
 
