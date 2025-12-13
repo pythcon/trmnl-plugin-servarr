@@ -19,12 +19,6 @@
 
 FROM python:3.12-slim
 
-# Install dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create app directory
 WORKDIR /app
 
 # Copy requirements and install Python dependencies
@@ -33,13 +27,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy collector script
 COPY trmnl_collector.py /app/
-RUN chmod +x /app/trmnl_collector.py
 
-# Copy bash script for backwards compatibility
-COPY trmnl-servarr-collector.sh /app/
-RUN chmod +x /app/trmnl-servarr-collector.sh
-
-# Optional: Copy default config if it exists
+# Copy example config for reference
 COPY config.example.yaml /app/
 
 # Environment variables for single-instance mode (optional)
@@ -52,10 +41,6 @@ ENV CALENDAR_DAYS_BEFORE="0"
 ENV CALENDAR_ONLY=""
 ENV INTERVAL="0"
 ENV TZ="UTC"
-
-# Health check (works for single-instance mode)
-HEALTHCHECK --interval=60s --timeout=10s --start-period=10s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8080/health', timeout=5)" || exit 0
 
 # Entry point script
 COPY --chmod=755 <<'EOF' /app/entrypoint.sh
