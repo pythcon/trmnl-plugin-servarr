@@ -592,13 +592,16 @@ class ServarrCollector:
         # Get timezone abbreviation for display
         tz_abbrev = self._get_timezone_abbrev()
 
+        # Use custom name if provided, otherwise use app type in title case
+        display_name = self.name if self.name else app_type.capitalize()
+
         # Build payload
         if self.calendar_only:
             # Calendar only mode - minimal payload
             calendar = self.fetch_calendar(app_type)
             payload = {
                 'merge_variables': {
-                    'app_name': app_type.capitalize(),
+                    'app_name': display_name,
                     'app_type': app_type,
                     'last_updated': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
                     'timezone': tz_abbrev,
@@ -615,7 +618,7 @@ class ServarrCollector:
 
             payload = {
                 'merge_variables': {
-                    'app_name': app_type.capitalize(),
+                    'app_name': display_name,
                     'app_type': app_type,
                     'last_updated': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
                     'timezone': tz_abbrev,
@@ -695,7 +698,7 @@ def create_collectors_from_config(config: Dict[str, Any], args: argparse.Namespa
 def create_collector_from_args(args: argparse.Namespace) -> ServarrCollector:
     """Create a single collector from CLI arguments."""
     return ServarrCollector(
-        name=args.type or 'servarr',
+        name=args.name,
         url=args.url,
         api_key=args.api_key,
         webhook=args.webhook,
@@ -768,6 +771,7 @@ Examples:
     parser.add_argument('-u', '--url', help='Servarr instance URL')
     parser.add_argument('-k', '--api-key', help='Servarr API key')
     parser.add_argument('-w', '--webhook', help='TRMNL webhook URL')
+    parser.add_argument('-n', '--name', default='', help='Display name for title bar (default: auto from app type)')
     parser.add_argument('-t', '--type', help='App type (sonarr, radarr, lidarr, readarr, prowlarr)')
     parser.add_argument('-d', '--days', type=int, default=7, help='Calendar days forward (default: 7)')
     parser.add_argument('-b', '--days-before', type=int, default=0, help='Calendar days back (default: 0)')

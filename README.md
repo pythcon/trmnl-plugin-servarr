@@ -198,6 +198,7 @@ docker run -d \
 | `SERVARR_URL` | Servarr instance URL | Yes |
 | `API_KEY` | Servarr API key | Yes |
 | `WEBHOOK_URL` | TRMNL webhook URL | Yes |
+| `APP_NAME` | Display name for title bar (e.g., "TV Shows") | No (auto from app type) |
 | `INTERVAL` | Collection interval in seconds (0 = run once) | No (default: 0) |
 | `TZ` | Timezone for display | No (default: UTC) |
 | `APP_TYPE` | App type (sonarr/radarr/lidarr/readarr/prowlarr) | No (auto-detected) |
@@ -237,6 +238,7 @@ python trmnl_collector.py \
 | `-u, --url` | Servarr instance URL | Required (if no config) |
 | `-k, --api-key` | Servarr API key | Required (if no config) |
 | `-w, --webhook` | TRMNL webhook URL | None (prints to stdout) |
+| `-n, --name` | Display name for title bar (e.g., "TV Shows") | Auto from app type |
 | `-t, --type` | App type (sonarr/radarr/lidarr/readarr/prowlarr) | Auto-detected |
 | `-d, --days` | Calendar days forward | 7 |
 | `-b, --days-before` | Calendar days back | 0 |

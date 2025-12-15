@@ -35,6 +35,7 @@ COPY config.example.yaml /app/
 ENV SERVARR_URL=""
 ENV API_KEY=""
 ENV WEBHOOK_URL=""
+ENV APP_NAME=""
 ENV APP_TYPE=""
 ENV CALENDAR_DAYS="7"
 ENV CALENDAR_DAYS_BEFORE="0"
@@ -64,6 +65,10 @@ ARGS="-u $SERVARR_URL -k $API_KEY"
 
 if [[ -n "$WEBHOOK_URL" ]]; then
     ARGS="$ARGS -w $WEBHOOK_URL"
+fi
+
+if [[ -n "$APP_NAME" ]]; then
+    ARGS="$ARGS -n $APP_NAME"
 fi
 
 if [[ -n "$APP_TYPE" ]]; then
