@@ -2,7 +2,7 @@
 
 A beautiful dashboard for your Servarr media stack on TRMNL e-ink displays. Monitor download queues, upcoming releases, recently added content, and library statistics from Sonarr, Radarr, Lidarr, Readarr, or Prowlarr.
 
-![Servarr Dashboard](https://raw.githubusercontent.com/pythcon/trmnl-plugin-servarr/master/assets/logo.png)
+![Servarr Dashboard](https://raw.githubusercontent.com/pythcon/trmnl-plugin-servarr/master/assets/trmnl-plugin-servarr2.png)
 
 ## Features
 
