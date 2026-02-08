@@ -206,6 +206,12 @@ docker run -d \
 | `CALENDAR_DAYS_BEFORE` | Days back for calendar | No (default: 0) |
 | `CALENDAR_ONLY` | Only send calendar data (true/false) | No (default: false) |
 
+### Terminus / BYOS (Self-Hosted)
+
+If you run a self-hosted [Terminus](https://github.com/usetrmnl/byos_hanami)
+instance, the collector can serve data via HTTP instead of pushing to webhooks.
+See the [Terminus Setup Guide](docs/terminus.md) for details.
+
 ### Python Script (No Docker)
 
 Run the collector directly with Python if you prefer not to use Docker:

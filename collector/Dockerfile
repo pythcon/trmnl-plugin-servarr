@@ -42,6 +42,8 @@ ENV CALENDAR_DAYS_BEFORE="0"
 ENV CALENDAR_ONLY=""
 ENV INTERVAL="0"
 ENV TZ="UTC"
+ENV SERVE_PORT=""
+EXPOSE 8080
 
 # Entry point script
 COPY --chmod=755 <<'EOF' /app/entrypoint.sh
@@ -51,7 +53,11 @@ set -e
 # Check if config file exists
 if [[ -f "/app/config.yaml" ]]; then
     echo "Starting with config file..."
-    exec python /app/trmnl_collector.py --config /app/config.yaml
+    ARGS="--config /app/config.yaml"
+    if [[ -n "$SERVE_PORT" ]]; then
+        ARGS="$ARGS --serve --port $SERVE_PORT"
+    fi
+    exec python /app/trmnl_collector.py $ARGS
 fi
 
 # Fall back to environment variables (single instance mode)
@@ -93,6 +99,10 @@ fi
 
 if [[ -n "$TZ" ]]; then
     ARGS="$ARGS -z $TZ"
+fi
+
+if [[ -n "$SERVE_PORT" ]]; then
+    ARGS="$ARGS --serve --port $SERVE_PORT"
 fi
 
 # Run the Python collector

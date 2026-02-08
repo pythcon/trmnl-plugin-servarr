@@ -26,6 +26,8 @@ import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 from zoneinfo import ZoneInfo
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import requests
 import yaml
@@ -604,6 +606,7 @@ class ServarrCollector:
                     'app_name': display_name,
                     'app_type': app_type,
                     'last_updated': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    'last_updated_local': datetime.now(ZoneInfo(self.timezone)).strftime('%Y-%m-%d %H:%M') if self.timezone else datetime.now().strftime('%Y-%m-%d %H:%M'),
                     'timezone': tz_abbrev,
                     'calendar': calendar,
                 }
@@ -621,6 +624,7 @@ class ServarrCollector:
                     'app_name': display_name,
                     'app_type': app_type,
                     'last_updated': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    'last_updated_local': datetime.now(ZoneInfo(self.timezone)).strftime('%Y-%m-%d %H:%M') if self.timezone else datetime.now().strftime('%Y-%m-%d %H:%M'),
                     'timezone': tz_abbrev,
                     'health': health,
                     'queue': queue,
@@ -662,6 +666,65 @@ class ServarrCollector:
             if self.verbose and hasattr(e, 'response') and e.response is not None:
                 logger.error(f"[{self.name}] Response: {e.response.text}")
             return False
+
+
+# --- HTTP serve mode for Terminus/BYOS ---
+
+_serve_data: Dict[str, Dict[str, Any]] = {}
+_serve_lock = threading.Lock()
+
+
+def store_payload(name: str, payload: Dict[str, Any]):
+    """Cache latest payload for HTTP serving."""
+    data = payload.get('merge_variables', payload)
+    with _serve_lock:
+        _serve_data[name] = data
+
+
+class DataHandler(BaseHTTPRequestHandler):
+    """HTTP handler that serves cached Servarr data as JSON."""
+
+    def do_GET(self):
+        path = self.path.rstrip('/')
+
+        if path == '' or path == '/':
+            with _serve_lock:
+                instances = {
+                    name: f'/data/{name}' for name in _serve_data
+                }
+            self._json_response(200, {'instances': instances})
+            return
+
+        if path.startswith('/data/'):
+            name = path[6:]
+            with _serve_lock:
+                data = _serve_data.get(name)
+            if data is None:
+                self._json_response(404, {'error': f'Instance "{name}" not found'})
+                return
+            self._json_response(200, data)
+            return
+
+        self.send_response(404)
+        self.end_headers()
+
+    def _json_response(self, status: int, body: Any):
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(body).encode())
+
+    def log_message(self, format, *args):
+        logger.debug(f"HTTP: {args[0]}")
+
+
+def start_server(host: str, port: int):
+    """Start HTTP server in a daemon thread."""
+    server = HTTPServer((host, port), DataHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    logger.info(f"HTTP server listening on {host}:{port}")
+    return server
 
 
 def load_config(config_path: str) -> Dict[str, Any]:
@@ -721,6 +784,7 @@ def run_collection(collectors: List[ServarrCollector]) -> bool:
     for collector in collectors:
         try:
             payload = collector.collect()
+            store_payload(collector.name, payload)
             if collector.send(payload):
                 succeeded.append(collector.name)
             else:
@@ -780,6 +844,9 @@ Examples:
     parser.add_argument('-i', '--interval', type=int, default=0, help='Collection interval in seconds (0 = run once)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
     parser.add_argument('--dry-run', action='store_true', help='Print JSON, don\'t send to webhook')
+    parser.add_argument('--serve', action='store_true', help='Start HTTP server for Terminus/BYOS')
+    parser.add_argument('--port', type=int, default=8080, help='HTTP server port (default: 8080)')
+    parser.add_argument('--host', default='0.0.0.0', help='HTTP server bind address (default: 0.0.0.0)')
     parser.add_argument('--version', action='version', version=f'%(prog)s {VERSION}')
 
     args = parser.parse_args()
@@ -820,6 +887,20 @@ Examples:
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
+
+    # Start HTTP server if requested
+    serve = args.serve
+    if args.config:
+        serve_config = config.get('serve', {})
+        serve = serve or serve_config.get('enabled', False)
+        serve_port = serve_config.get('port', args.port)
+        serve_host = serve_config.get('host', args.host)
+    else:
+        serve_port = args.port
+        serve_host = args.host
+
+    if serve:
+        start_server(serve_host, serve_port)
 
     # Run collection
     if interval > 0:

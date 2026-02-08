@@ -27,6 +27,11 @@ services:
       # Timezone (can also be set in config.yaml)
       - TZ=America/New_York
     network_mode: host
+    # --- Terminus/BYOS: uncomment to enable HTTP serve mode ---
+    # ports:
+    #   - "8080:8080"
+    # environment:
+    #   - SERVE_PORT=8080
 
 # ============================================
 # ALTERNATIVE: Environment Variable Mode

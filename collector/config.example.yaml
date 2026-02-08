@@ -15,6 +15,13 @@ defaults:
   calendar_days: 7         # Days forward for calendar
   calendar_days_before: 0  # Days back for calendar (historical)
 
+# Optional: HTTP server for Terminus/BYOS Extensions
+# When enabled, the collector serves data via HTTP so Terminus can poll for it.
+# serve:
+#   enabled: true
+#   port: 8080
+#   host: 0.0.0.0
+
 # Instance definitions
 # Each instance sends to its own TRMNL webhook
 instances:
@@ -24,7 +31,7 @@ instances:
   - name: sonarr
     url: http://sonarr:8989
     api_key: your-sonarr-api-key
-    webhook: https://usetrmnl.com/api/custom_plugins/your-sonarr-webhook-id
+    webhook: https://usetrmnl.com/api/custom_plugins/your-sonarr-webhook-id  # Optional when using serve mode
     # type: sonarr  # Optional - auto-detected from URL
 
   # ============================================
